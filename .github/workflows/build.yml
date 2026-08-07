@@ -1,4 +1,4 @@
-name: Build
+name: Build // ASSEMBLE
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
     name: assembleDebug
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout // 检出
         uses: actions/checkout@v7
 
       - name: Set up JDK 17
@@ -22,5 +22,5 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
 
-      - name: Build debug APK
+      - name: Assemble debug // 构建调试包
         run: ./gradlew assembleDebug --no-daemon --stacktrace

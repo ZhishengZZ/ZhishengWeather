@@ -1,31 +1,31 @@
-name: Bug 报告
-description: 崩溃、数据异常、界面问题
+name: Bug 报告 // BUG REPORT
+description: 报告崩溃 / 数据异常 / 界面问题
 title: "[BUG] "
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        感谢报告。提交前请先确认 README 的版本记录里没有已知说明。
-        **不要附带任何凭据、私钥或个人信息。**
+        感谢报告。提交前请先确认 README `08//` 的版本记录里没有已知说明。
+        **请勿附带任何凭据、私钥或个人信息。**
   - type: input
     id: version
     attributes:
-      label: 应用版本
+      label: 应用版本 // VERSION
       placeholder: 如 1.2.4
     validations:
       required: true
   - type: input
     id: device
     attributes:
-      label: 设备与系统
+      label: 设备与系统 // DEVICE
       placeholder: 如 Xiaomi 13 / Android 14
     validations:
       required: true
   - type: textarea
     id: repro
     attributes:
-      label: 复现步骤
+      label: 复现步骤 // REPRO
       placeholder: |
         1. 打开…
         2. 切换到城市…
@@ -35,25 +35,25 @@ body:
   - type: textarea
     id: expected
     attributes:
-      label: 期望行为
+      label: 期望行为 // EXPECTED
     validations:
       required: true
   - type: textarea
     id: actual
     attributes:
-      label: 实际行为
+      label: 实际行为 // ACTUAL
       placeholder: 建议附截图
     validations:
       required: true
   - type: dropdown
     id: source
     attributes:
-      label: 疑似相关的数据源
+      label: 疑似相关数据源 // SOURCE
       options:
         - 不确定
-        - 和风天气（主源）
-        - Open-Meteo（兜底）
-        - 小米（补充源）
+        - 和风天气主源
+        - Open-Meteo 兜底
+        - 小米 补充源
         - 与数据无关（纯界面）
     validations:
       required: true

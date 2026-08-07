@@ -1,8 +1,10 @@
-![枳生天气](assets/banner.png)
+![枳生天气 · ZHISHENG WEATHER TERMINAL](assets/banner.png)
 
-**枳生天气**是一款风格相当"个人向"的安卓天气应用：EVA 式的磷光终端界面，黑底单色青，信息密度拉满。没有广告，没有会员套路，不会动不动就要求你授权一堆东西。打开就是天气，别的都省了。
-
-市面上的天气应用越做越重——开屏广告、会员弹窗、通知里夹带营销推送。我想要的只是一个打开就能看、没有多余东西的工具，找了一圈没有完全合意的，干脆自己写了一个。
+<p align="center">
+  <b>枳生天气</b> // ZHISHENG WEATHER TERMINAL<br/>
+  一部 EVA 磷光终端美学的安卓天气终端。<br/>
+  <sub>MAGI // MELCHIOR-1 · BALTHASAR-2 · CASPER-3</sub>
+</p>
 
 <p align="center">
   <img alt="version" src="https://img.shields.io/badge/version-1.2.4-FF6F1E?style=flat-square"/>
@@ -11,16 +13,20 @@
   <img alt="build" src="https://img.shields.io/github/actions/workflow/status/ZhishengZZ/ZhishengWeather/.github/workflows/build.yml?style=flat-square&label=BUILD"/>
 </p>
 
+**枳生天气**是一款风格相当"个人向"的安卓天气应用：黑底单色青的磷光终端界面，信息密度拉满。没有广告，没有会员套路，不会动不动就要求你授权一堆东西。打开就是天气，别的都省了。
+
+市面上的天气应用越做越重——开屏广告、会员弹窗、通知里夹带营销推送。我想要的只是一个打开就能看、没有多余东西的工具，找了一圈没有完全合意的，干脆自己写了一个。
+
 ---
 
-## 界面预览
+## 01// 界面预览 SCREENSHOTS
 
-| 主页 | 遥测信息 | 搜索 | 设置 |
+| 主页 // HOME | 遥测 // TELEMETRY | 搜索 // SEARCH | 设置 // SETTINGS |
 |:---:|:---:|:---:|:---:|
 | <img src="assets/screen_home.png" width="220"/> | <img src="assets/screen_telemetry.png" width="220"/> | <img src="assets/screen_search.png" width="220"/> | <img src="assets/screen_settings.png" width="220"/> |
 | 实时天气 · 灾害预警 · 逐时降水 | 湿度 / 风向 / 气压等遥测 · 空气质量 · 生活指数 | 城市检索 · 多城管理 | 单位 · 模块开关 · 数据源状态 |
 
-## 功能
+## 02// 功能特性 FEATURES
 
 - **实时天气**：温度、体感、天气现象，六边形图标一眼看懂
 - **灾害预警**：气象预警按黄 / 橙 / 红分级着色，斜纹警示条，点开看详情
@@ -35,21 +41,21 @@
 - **多城市**：搜索、收藏、一键切换；同名城市标注省份归属（甘肃·金昌 / 四川·阿坝），不会选错
 - **单位与模块**：℃ / ℉ 全局切换，数据模块可单独开关
 
-## 数据从哪来
+## 03// 数据融合 DATA SOURCES
 
 和市面上很多天气应用不同，枳生天气不是只吃一家数据，而是把三个来源拼起来。任何一路出问题，界面都不会"开天窗"：
 
-| 角色 | 来源 | 负责 |
+| 链路角色 | 数据源 | 负责 |
 |:--|:--|:--|
-| 主源 | 和风天气 | 实时 / 预警 / 逐时 / 逐日 / 分钟降水 / 空气质量 / 生活指数 |
-| 补充 | 小米天气 | 昨日复盘 / 台风 / 逐日后半段 / 预警合并 |
-| 兜底 | Open-Meteo | 全球免费源，逐时 / 逐日不足时自动补齐 |
+| **主源** | 和风天气 | 实时 / 预警 / 逐时 / 逐日 / 分钟降水 / 空气质量 / 生活指数 |
+| **补充** | 小米天气 | 昨日复盘 / 台风 / 逐日后半段 / 预警合并 |
+| **兜底** | Open-Meteo | 全球免费源，逐时 / 逐日不足时自动补齐 |
 
 具体来说：主源逐时数据少于两条时，按城市本地时区折算时间轴，用 Open-Meteo 补满 24 小时；逐日不满 15 天时同样补尾。海外城市也凑得满 15 天。
 
 认证上，和风接口用 Ed25519（EdDSA）签名 JWT，密钥只放在本地 `local.properties`，仓库里不随附任何凭据。
 
-## 技术栈
+## 04// 技术栈 STACK
 
 | 层 | 选型 |
 |:--|:--|
@@ -61,7 +67,27 @@
 | 存储 | DataStore（城市 / 偏好 / 模块开关） |
 | 并发 | kotlinx-coroutines 1.9 |
 
-## 自己构建
+## 05// 项目结构 STRUCTURE
+
+```
+app/src/main/kotlin/com/zhisheng/weather/
+├── MainActivity.kt              # 单 Activity 入口
+├── data/
+│   ├── QWeatherApi.kt / QwAuth.kt / QwModels.kt   # 主源 + Ed25519 JWT 签名
+│   ├── XiaomiApi.kt / XiaomiModels.kt             # 补充链
+│   ├── OpenMeteoApi.kt                            # 兜底链（daily + hourly）
+│   ├── WeatherRepository.kt                       # 三源融合 · backfill 决策
+│   ├── MoonCalc.kt                                # 本地月相算法（Meeus）
+│   └── CityRepository.kt / SettingsRepository.kt  # 城市 / 偏好
+├── model/Weather.kt             # 领域模型
+└── ui/
+    ├── WeatherViewModel.kt
+    ├── home/HomeScreen.kt       # 主页终端面板
+    ├── SearchScreen.kt / SettingsScreen.kt
+    └── components/WeatherIcon.kt # 图标渲染
+```
+
+## 06// 构建与运行 BUILD
 
 需要 JDK 17 和 Android SDK 34，Gradle Wrapper 自带。
 
@@ -95,7 +121,7 @@ keystore.key_password=<...>
 >
 > release 签名默认读 `keystore/zhisheng.jks`（alias `zhisheng`）。出于安全，keystore 和凭据都不随仓库分发；只装调试包的话直接 `assembleDebug` 即可。
 
-## 没做好的地方
+## 07// 已知不足 KNOWN ISSUES
 
 真实的项目总有不完美，先写在这：
 
@@ -104,7 +130,7 @@ keystore.key_password=<...>
 - 预警跨源去重按标题精确匹配，不同源文案略有出入时可能重复
 - 界面图标是单色 stroke 风，多色版看后续有没有动力做
 
-## 版本记录
+## 08// 版本记录 CHANGELOG
 
 **v1.2.4**（当前）
 
@@ -121,7 +147,7 @@ keystore.key_password=<...>
 
 更早的改动见 commit 历史。
 
-## 许可与声明
+## 09// 许可与声明 LICENSE & NOTES
 
 - 基于 [MIT](LICENSE) 开源；社区规范见 [贡献指南](CONTRIBUTING.md) · [行为准则](CODE_OF_CONDUCT.md) · [安全说明](SECURITY.md)
 - 个人学习与兴趣作品，UI 美学致敬 EVA / NERV 终端风格，仅作同人创作，不用于商业
@@ -131,4 +157,4 @@ keystore.key_password=<...>
 
 ---
 
-<p align="center"><sub>枳生天气 · 磷光终端 · made with kotlin</sub></p>
+<p align="center"><sub>ZHISHENG WEATHER TERMINAL // PATTERN BLUE · made with phosphor & kotlin</sub></p>
