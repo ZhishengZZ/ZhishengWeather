@@ -1,25 +1,25 @@
-name: Bug 报告 // BUG REPORT
-description: 报告崩溃 / 数据异常 / 界面问题
+name: Bug Report // 缺陷报告
+description: 报告崩溃 / 数据异常 / UI 缺陷 — Report crashes, data anomalies or UI defects
 title: "[BUG] "
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        感谢报告。提交前请先确认 README `09//` 的版本记录里没有已知说明。
-        **请勿附带任何凭据、私钥或个人信息。**
+        感谢报告。**请勿附带任何凭据、私钥或个人信息。**
+        Thanks for reporting. **Do not attach credentials, private keys or personal data.**
   - type: input
     id: version
     attributes:
       label: 应用版本 // VERSION
-      placeholder: 如 0.0.1 Preview
+      placeholder: 如 / e.g. 0.0.1 Preview
     validations:
       required: true
   - type: input
     id: device
     attributes:
       label: 设备与系统 // DEVICE
-      placeholder: 如 Xiaomi 13 / Android 14
+      placeholder: 如 / e.g. Xiaomi 13 / Android 14
     validations:
       required: true
   - type: textarea
@@ -27,9 +27,9 @@ body:
     attributes:
       label: 复现步骤 // REPRO
       placeholder: |
-        1. 打开…
-        2. 切换到城市…
-        3. 出现…
+        1. 打开… / Open…
+        2. 切换城市… / Switch city…
+        3. 出现… / Then…
     validations:
       required: true
   - type: textarea
@@ -42,18 +42,18 @@ body:
     id: actual
     attributes:
       label: 实际行为 // ACTUAL
-      placeholder: 建议附截图
+      placeholder: 建议附截图 / screenshots welcome
     validations:
       required: true
   - type: dropdown
     id: source
     attributes:
-      label: 疑似相关数据源 // SOURCE
+      label: 疑似相关数据源 // SUSPECT FEED
       options:
-        - 不确定
-        - 和风天气主源
-        - Open-Meteo 兜底
-        - 小米 补充源
-        - 与数据无关（纯界面）
+        - 不确定 / Not sure
+        - 和风天气主源 / QWeather primary
+        - Open-Meteo 兜底 / Open-Meteo fallback
+        - 小米 AUX / Xiaomi AUX
+        - 与数据无关（纯 UI）/ Data-unrelated (pure UI)
     validations:
       required: true
