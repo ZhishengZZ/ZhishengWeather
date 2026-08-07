@@ -1,0 +1,26 @@
+# ===== Gradle / 构建产物 =====
+.gradle/
+build/
+app/build/
+.kotlin/
+dist/
+captures/
+local.properties
+*.log
+
+# ===== IDE =====
+.idea/
+*.iml
+.DS_Store
+
+# ===== 签名凭据（敏感，永不入库） =====
+keystore/
+
+# ===== 开发过程产物（仅本地保留） =====
+icon-preview/
+icon-backup/
+HANDOFF.md
+STATUS.md
+WORKLOG.md
+PROGRESS_*.md
+进度总结.md
