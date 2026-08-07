@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.zhisheng.weather.model.City
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
@@ -27,6 +28,23 @@ object CityRepository {
 
     fun init(context: Context) {
         store = context.applicationContext.dataStore
+    }
+
+    // 首装种子默认城市（零配置体验：装好即有天气，无需手动加城市）；
+    // 以 KEY_CITIES 是否存在判定“首装”，用户删光城市后不会重种
+    suspend fun ensureDefaultCity() {
+        val seeded = store.data.map { it.contains(KEY_CITIES) }.first()
+        if (!seeded) {
+            addCity(
+                City(
+                    name = "北京",
+                    affiliation = "北京",
+                    latitude = 39.90,
+                    longitude = 116.41,
+                    locationKey = "101010100",
+                )
+            )
+        }
     }
 
     // 搜索城市（和风 GeoAPI 主，小米兜底）

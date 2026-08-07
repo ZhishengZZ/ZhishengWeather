@@ -60,6 +60,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, HomeUiState())
 
     init {
+        viewModelScope.launch { CityRepository.ensureDefaultCity() }
         viewModelScope.launch {
             selectedCity.collect { city ->
                 if (city != null && city.locationKey != lastFetchedKey) {
