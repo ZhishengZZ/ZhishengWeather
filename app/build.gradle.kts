@@ -14,6 +14,10 @@ val localProps = Properties().apply {
 }
 fun lp(key: String, def: String = ""): String = localProps.getProperty(key, def)
 
+// 公开版构建开关：./gradlew assembleRelease -PpublicBuild
+// 强制和风凭据为空 + 换用随库公开证书，保证 Release 分发的 APK 不含个人凭据
+val publicBuild = providers.gradleProperty("publicBuild").isPresent
+
 android {
     namespace = "com.zhisheng.weather"
     compileSdk = 34
@@ -22,13 +26,13 @@ android {
         applicationId = "com.zhisheng.weather"
         minSdk = 26
         targetSdk = 34
-        versionCode = 10204
-        versionName = "1.2.4"
+        versionCode = 10205
+        versionName = "1.2.5"
 
-        buildConfigField("String", "QW_HOST", "\"${lp("qw.host")}\"")
-        buildConfigField("String", "QW_PROJECT_ID", "\"${lp("qw.project_id")}\"")
-        buildConfigField("String", "QW_KID", "\"${lp("qw.kid", "TMWDYM6VB4")}\"")
-        buildConfigField("String", "QW_PRIVATE_KEY", "\"${lp("qw.private_key")}\"")
+        buildConfigField("String", "QW_HOST", "\"${if (publicBuild) "" else lp("qw.host")}\"")
+        buildConfigField("String", "QW_PROJECT_ID", "\"${if (publicBuild) "" else lp("qw.project_id")}\"")
+        buildConfigField("String", "QW_KID", "\"${if (publicBuild) "" else lp("qw.kid", "TMWDYM6VB4")}\"")
+        buildConfigField("String", "QW_PRIVATE_KEY", "\"${if (publicBuild) "" else lp("qw.private_key")}\"")
     }
 
     signingConfigs {
@@ -36,10 +40,18 @@ android {
             val props = Properties()
             val f = rootProject.file("local.properties")
             if (f.canRead()) props.load(f.inputStream())
-            storeFile = project.rootProject.file("keystore/zhisheng.jks")
-            storePassword = props.getProperty("keystore.store_password") ?: "zhisheng123"
-            keyAlias = "zhisheng"
-            keyPassword = props.getProperty("keystore.key_password") ?: "zhisheng123"
+            if (publicBuild) {
+                // 公开版：随库公开证书（密码公开即其设计，仅保证安装/升级签名一致）
+                storeFile = project.rootProject.file("keystore/public.jks")
+                storePassword = "public123"
+                keyAlias = "public"
+                keyPassword = "public123"
+            } else {
+                storeFile = project.rootProject.file("keystore/zhisheng.jks")
+                storePassword = props.getProperty("keystore.store_password") ?: "zhisheng123"
+                keyAlias = "zhisheng"
+                keyPassword = props.getProperty("keystore.key_password") ?: "zhisheng123"
+            }
         }
     }
 

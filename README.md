@@ -6,8 +6,20 @@
   <sub>MAGI // MELCHIOR-1 · BALTHASAR-2 · CASPER-3</sub>
 </p>
 
+---
+
+## ⬇ 立即获取 GET IT NOW
+
+| 方式 | 适合 | 说明 |
+|:--|:--|:--|
+| [**直接下 APK**](../../releases) | 只想用的用户 | Releases 的 `public` 公开版，零配置，装上即用 |
+| **源码构建** | 开发者 / 满血版用户 | 见 `06//`；填自己的和风凭据解锁主源 |
+
+> 公开版 APK 以 `-PpublicBuild` 构建：**不含任何和风凭据**，数据走小米源 + Open-Meteo 公共源；
+> 满血版（和风主源：分钟级降水图 / 穿衣感冒指数等）需源码构建并自备凭据。
+
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-1.2.4-FF6F1E?style=flat-square"/>
+  <img alt="version" src="https://img.shields.io/badge/version-1.2.5-FF6F1E?style=flat-square"/>
   <img alt="license" src="https://img.shields.io/badge/license-MIT-3BFF8C?style=flat-square"/>
   <img alt="release" src="https://img.shields.io/github/v/release/ZhishengZZ/ZhishengWeather?style=flat-square&color=FF6F1E"/>
   <img alt="build" src="https://img.shields.io/github/actions/workflow/status/ZhishengZZ/ZhishengWeather/.github/workflows/build.yml?style=flat-square&label=BUILD"/>
@@ -114,7 +126,8 @@ keystore.key_password=<...>
 
 ```bash
 ./gradlew assembleDebug      # 调试包
-./gradlew assembleRelease    # 签名发布包
+./gradlew assembleRelease    # 签名发布包（个人满血版，需自备 keystore/zhisheng.jks）
+./gradlew assembleRelease -PpublicBuild   # 公开版：凭据强制为空 + 随库公开证书，用于 Release 分发
 ```
 
 > **不填凭据也能跑**：主源自动停用，退化为小米源 + Open-Meteo，实况 / 逐时 / 逐日 / 空气质量 / 预警都还在。首次安装默认给你北京，装好就能看。
@@ -132,7 +145,13 @@ keystore.key_password=<...>
 
 ## 08// 版本记录 CHANGELOG
 
-**v1.2.4**（当前）
+**v1.2.5**（当前）
+
+- 零配置体验：首装种子默认城市北京，装好即有天气（无凭据自动降级小米源 + Open-Meteo）
+- 新增 `-PpublicBuild` 公开版构建链路：凭据强制为空 + 随库公开证书 `keystore/public.jks`
+- Release 发布公开版 APK，零配置安装即用
+
+**v1.2.4**
 
 - 同名城市串台修复：小米按名反查改为取最近距离命中，超 150km 视为无匹配；城市抽屉显示省份归属
 - 全新图标系统：15 枚单色青双色调终端风图标，替换旧矢量图
