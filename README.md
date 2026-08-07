@@ -6,6 +6,9 @@
   <img alt="compose" src="https://img.shields.io/badge/JETPACK_COMPOSE-2024.10-3BFF8C?style=flat-square"/>
   <img alt="minsdk" src="https://img.shields.io/badge/MIN_SDK-26-20F0FF?style=flat-square"/>
   <img alt="data" src="https://img.shields.io/badge/DATA-QWEATHER_%2F_OPEN--METEO-23232E?style=flat-square"/>
+  <img alt="license" src="https://img.shields.io/badge/LICENSE-MIT-3BFF8C?style=flat-square"/>
+  <img alt="release" src="https://img.shields.io/github/v/release/ZhishengZZ/ZhishengWeather?style=flat-square&color=FF6F1E"/>
+  <img alt="build" src="https://img.shields.io/github/actions/workflow/status/ZhishengZZ/ZhishengWeather/.github/workflows/build.yml?style=flat-square&label=BUILD"/>
 </p>
 
 <p align="center">
@@ -168,6 +171,7 @@ keystore.key_password=<...>
 
 ## 09// 声明 LICENSE & NOTES
 
+- 本项目基于 [MIT](LICENSE) 许可证开源；社区规范见 [CONTRIBUTING](CONTRIBUTING.md) · [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md) · [SECURITY](SECURITY.md)。
 - 本项目为个人学习与兴趣作品，UI 美学致敬 EVA / NERV 终端风格，仅作同人创作，不用于商业。
 - 天气数据版权归属：[和风天气](https://www.qweather.com/) · [Open-Meteo](https://open-meteo.com/) · 小米天气源；数据仅供参考。
 - 使用和风天气需自行申请开发者凭据与 Ed25519 密钥，详见其官方文档。

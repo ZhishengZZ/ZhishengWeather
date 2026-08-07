@@ -1,0 +1,26 @@
+name: Build // ASSEMBLE
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  assemble:
+    name: assembleDebug
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout // 检出
+        uses: actions/checkout@v4
+
+      - name: JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Assemble debug // 构建调试包
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
