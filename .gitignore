@@ -14,11 +14,14 @@ local.properties
 .DS_Store
 
 # ===== 签名凭据（敏感，永不入库） =====
-keystore/
+keystore/*.jks
+# 公开版签名证书（非敏感，随库分发，供 -PpublicBuild 构建公开 APK）
+!keystore/public.jks
 
 # ===== 开发过程产物（仅本地保留） =====
 icon-preview/
 icon-backup/
+docs-backup/
 HANDOFF.md
 STATUS.md
 WORKLOG.md
