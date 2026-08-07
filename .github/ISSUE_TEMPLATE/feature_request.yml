@@ -1,32 +1,32 @@
-name: Feature Request // 功能请求
-description: 为终端提议新功能或体验优化
+name: 功能请求
+description: 提议新功能或体验优化
 title: "[FEAT] "
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        好点子先聊透再动手。建议先在 Discussions 发起讨论，凝聚共识后再建本请求。
+        好点子先聊透再动手。建议先在 Discussions 里发起讨论，达成共识后再来开这个请求。
   - type: textarea
     id: idea
     attributes:
-      label: 功能描述 // IDEA
-      placeholder: 用一两段话描述这个功能长什么样、怎么用
+      label: 想要什么功能
+      placeholder: 用一两段话描述它长什么样、怎么用
     validations:
       required: true
   - type: textarea
     id: why
     attributes:
-      label: 解决的问题 // WHY
-      placeholder: 它改善了什么场景？没有它现在怎么绕？
+      label: 解决什么问题
+      placeholder: 它改善了哪个场景？现在是怎么将就的？
     validations:
       required: true
   - type: dropdown
     id: scope
     attributes:
-      label: 所属模块 // SCOPE
+      label: 属于哪块
       options:
-        - 主页 UI
+        - 主页界面
         - 数据源 / 融合层
         - 图标与美术
         - 设置 / 偏好
@@ -36,7 +36,7 @@ body:
   - type: checkboxes
     id: style
     attributes:
-      label: 风格共识 // STYLE
+      label: 风格共识
       options:
-        - label: 我理解实现需服从 EVA / NERV 磷光终端的整体美术风格，可能被调整呈现方式
+        - label: 我理解功能实现要服从整体的终端美术风格，呈现方式可能被调整
           required: true
