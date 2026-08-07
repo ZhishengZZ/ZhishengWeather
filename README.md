@@ -53,7 +53,19 @@
 - **多城市**：搜索、收藏、一键切换；同名城市标注省份归属（甘肃·金昌 / 四川·阿坝），不会选错
 - **单位与模块**：℃ / ℉ 全局切换，数据模块可单独开关
 
-## 03// 数据融合 DATA SOURCES
+## 03// 图标系统 ICON SYSTEM
+
+<p align="center"><img src="assets/icons_grid.png" width="520"/></p>
+
+全套 **15 枚**终端风天气图标：纯黑底 · 单色青双色调 · 锐利矢量边缘。每枚由阿里云百炼 `qwen-image` 系列模型文生图生成，再走本地图像处理管线加工入库：
+
+```
+AI 生成 1024² ──▶ 亮度→Alpha 键控（黑底转透明）──▶ 32bpp 边缘平滑 ──▶ 512px 归一 ──▶ drawable-nodpi
+```
+
+覆盖：晴 / 多云 / 阴 / 雾 / 小雨 / 大雨 / 雷暴 / 雪 / 风 / 霰 等，昼夜变体（日 / 月）齐备。
+
+## 04// 数据融合 DATA SOURCES
 
 和市面上很多天气应用不同，枳生天气不是只吃一家数据，而是把三个来源拼起来。任何一路出问题，界面都不会"开天窗"：
 
@@ -67,7 +79,7 @@
 
 认证上，和风接口用 Ed25519（EdDSA）签名 JWT，密钥只放在本地 `local.properties`，仓库里不随附任何凭据。
 
-## 04// 技术栈 STACK
+## 05// 技术栈 STACK
 
 | 层 | 选型 |
 |:--|:--|
@@ -79,7 +91,7 @@
 | 存储 | DataStore（城市 / 偏好 / 模块开关） |
 | 并发 | kotlinx-coroutines 1.9 |
 
-## 05// 项目结构 STRUCTURE
+## 06// 项目结构 STRUCTURE
 
 ```
 app/src/main/kotlin/com/zhisheng/weather/
@@ -99,7 +111,7 @@ app/src/main/kotlin/com/zhisheng/weather/
     └── components/WeatherIcon.kt # 图标渲染
 ```
 
-## 06// 构建与运行 BUILD
+## 07// 构建与运行 BUILD
 
 需要 JDK 17 和 Android SDK 34，Gradle Wrapper 自带。
 
@@ -134,7 +146,7 @@ keystore.key_password=<...>
 >
 > release 签名默认读 `keystore/zhisheng.jks`（alias `zhisheng`）。出于安全，keystore 和凭据都不随仓库分发；只装调试包的话直接 `assembleDebug` 即可。
 
-## 07// 已知不足 KNOWN ISSUES
+## 08// 已知不足 KNOWN ISSUES
 
 真实的项目总有不完美，先写在这：
 
@@ -143,7 +155,7 @@ keystore.key_password=<...>
 - 预警跨源去重按标题精确匹配，不同源文案略有出入时可能重复
 - 界面图标是单色 stroke 风，多色版看后续有没有动力做
 
-## 08// 版本记录 CHANGELOG
+## 09// 版本记录 CHANGELOG
 
 **v1.2.5**（当前）
 
@@ -166,7 +178,7 @@ keystore.key_password=<...>
 
 更早的改动见 commit 历史。
 
-## 09// 许可与声明 LICENSE & NOTES
+## 10// 许可与声明 LICENSE & NOTES
 
 - 基于 [MIT](LICENSE) 开源；社区规范见 [贡献指南](CONTRIBUTING.md) · [行为准则](CODE_OF_CONDUCT.md) · [安全说明](SECURITY.md)
 - 个人学习与兴趣作品，UI 美学致敬 EVA / NERV 终端风格，仅作同人创作，不用于商业

@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        感谢报告。提交前请先确认 README `08//` 的版本记录里没有已知说明。
+        感谢报告。提交前请先确认 README `09//` 的版本记录里没有已知说明。
         **请勿附带任何凭据、私钥或个人信息。**
   - type: input
     id: version

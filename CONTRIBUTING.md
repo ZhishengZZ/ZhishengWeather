@@ -13,7 +13,7 @@
 ## 02// 开发环境 SETUP
 
 - 需要 JDK 17、Android SDK 34，Gradle Wrapper 自带，clone 下来直接 `./gradlew assembleDebug` 就能跑。
-- 用和风天气的话，在根目录建 `local.properties` 填凭据（见 README `06//`）；不填也能编译。
+- 用和风天气的话，在根目录建 `local.properties` 填凭据（见 README `07//`）；不填也能编译。
 - 主题色统一引用 `ui/theme/Color.kt`，别硬编码色值。
 - 网络模型和领域模型分开（`data/*Models.kt` vs `model/Weather.kt`）。
 - Compose 状态尽量上提到 ViewModel，别堆在组件里。
