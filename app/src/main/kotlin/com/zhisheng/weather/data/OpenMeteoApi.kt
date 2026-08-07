@@ -33,7 +33,7 @@ object OpenMeteoApi {
     }
 
     // 逐时兜底（全球覆盖、免 key）：和风 hourly 单路失败/不支持时（海外城市 4xx 等）
-    // 逐时预报区曾整块空白（v1.2.5 修复），与逐日补齐同一套路
+    // 逐时预报区曾整块空白（v0.0.1 修复），与逐日补齐同一套路
     suspend fun fetchHourly(lat: Double, lon: Double): OpenMeteoHourlyResponse? = withContext(Dispatchers.IO) {
         try {
             val url = "https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon" +
@@ -50,7 +50,7 @@ object OpenMeteoApi {
     }
 
     // 16 天逐日（全球覆盖、免 key）：和风逐日上限 10 天、小米海外仅约 5 天，
-    // 用此接口把逐日补齐到 15 天（v1.2.3 东京丢 15 天预报的修复）。timezone=auto 按城市本地日界
+    // 用此接口把逐日补齐到 15 天（v0.0.1 东京丢 15 天预报的修复）。timezone=auto 按城市本地日界
     suspend fun fetchDaily(lat: Double, lon: Double): OpenMeteoDaily? = withContext(Dispatchers.IO) {
         try {
             val url = "https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon" +

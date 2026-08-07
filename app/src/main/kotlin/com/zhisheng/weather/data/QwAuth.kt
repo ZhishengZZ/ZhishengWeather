@@ -13,7 +13,7 @@ object QwAuth {
     private var cached: String? = null
     private var cachedExp: Long = 0
 
-    // 7 路请求在 OkHttp 线程池并发取 token：加锁保证可见性 + 只签一次（v1.2.4）
+    // 7 路请求在 OkHttp 线程池并发取 token：加锁保证可见性 + 只签一次（v0.0.1）
     @Synchronized
     fun token(): String? {
         val now = System.currentTimeMillis() / 1000

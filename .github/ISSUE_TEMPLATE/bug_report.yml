@@ -12,7 +12,7 @@ body:
     id: version
     attributes:
       label: 应用版本 // VERSION
-      placeholder: 如 1.2.4
+      placeholder: 如 0.0.1 Preview
     validations:
       required: true
   - type: input

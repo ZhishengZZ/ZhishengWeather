@@ -292,7 +292,7 @@ private fun WeatherContent(
     )
     val nums = visible.runningFold(0) { acc, v -> if (v) acc + 1 else acc }.drop(1)
 
-    // 入场动画总开关：状态提升到 LazyColumn 之上，只驱动一次交错入场（v1.2.1 修复快滑闪卡）
+    // 入场动画总开关：状态提升到 LazyColumn 之上，只驱动一次交错入场（v0.0.1 修复快滑闪卡）
     var entered by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { entered = true }
 
@@ -347,7 +347,7 @@ private fun WeatherContent(
 @Composable
 private fun StatusLine(city: com.zhisheng.weather.model.City?, data: WeatherData) {
     val coord = city?.let {
-        // 负坐标按 S/W 显示，避免出现 "-33.90N" 这种矛盾写法（v1.2.4）
+        // 负坐标按 S/W 显示，避免出现 "-33.90N" 这种矛盾写法（v0.0.1）
         String.format(
             Locale.US, "%.2f%s %.2f%s",
             Math.abs(it.latitude), if (it.latitude >= 0) "N" else "S",
@@ -442,7 +442,7 @@ private fun HeroSection(cur: CurrentWeather, data: WeatherData, unit: String, mo
 @Composable
 private fun AnimatedTemp(celsius: Double?, unit: String) {
     if (celsius == null) {
-        // 无数据显示 "--"，而不是误导性的 "0"（v1.2.4）
+        // 无数据显示 "--"，而不是误导性的 "0"（v0.0.1）
         Text(
             text = "--",
             style = MaterialTheme.typography.displayLarge,
@@ -616,7 +616,7 @@ private fun HourlySection(hourly: List<HourlyWeather>, unit: String, modifier: M
     val minT = temps.minOrNull() ?: 0.0
     val maxT = temps.maxOrNull() ?: 1.0
     HudCard(modifier = modifier.fillMaxWidth()) {
-        // key=时间戳：数据刷新时按身份复用 item，不整列重绑（v1.2.4）
+        // key=时间戳：数据刷新时按身份复用 item，不整列重绑（v0.0.1）
         LazyRow(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
             itemsIndexed(hourly, key = { _, h -> h.timeMillis }) { i, h ->
                 HourlyItem(h, hourly.getOrNull(i + 1), unit, minT, maxT, i == 0)
@@ -706,7 +706,7 @@ private fun PrecipCard(minutes: List<MinutePrecip>, summary: String?, modifier: 
                     )
                 }
                 // 现在标记线：按首末条实际时间定位（minutely 自当前时刻起约 +120min，
-                // 原写死 20% 位置+"-60min"标签与实际语义不符，v1.2.4）
+                // 原写死 20% 位置+"-60min"标签与实际语义不符，v0.0.1）
                 val nowMillis = System.currentTimeMillis()
                 val t0 = minutes.first().timeMillis
                 val t1 = minutes.last().timeMillis
@@ -1299,7 +1299,7 @@ private fun CityDrawer(
                     Box(Modifier.size(width = 3.dp, height = 14.dp).background(ZhishengMint))
                     Spacer(Modifier.width(8.dp))
                 }
-                // 城市名 + 归属地：同名城市（金川区@金昌 vs 金川县@阿坝）必须可区分（v1.2.4）
+                // 城市名 + 归属地：同名城市（金川区@金昌 vs 金川县@阿坝）必须可区分（v0.0.1）
                 Column(Modifier.weight(1f)) {
                     Text(
                         city.name,

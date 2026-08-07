@@ -87,7 +87,7 @@ object QWeatherApi {
             req
         }
         var resp = chain.proceed(first)
-        // 401 = token 被拒（时钟漂移/凭据作废）：作废缓存重签一次再试（v1.2.4）
+        // 401 = token 被拒（时钟漂移/凭据作废）：作废缓存重签一次再试（v0.0.1）
         if (resp.code == 401 && token != null) {
             resp.close()
             QwAuth.invalidate()

@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
-    // rememberCoroutineScope：原写法每次重组新建 scope 且永不取消（v1.2.4）
+    // rememberCoroutineScope：原写法每次重组新建 scope 且永不取消（v0.0.1）
     val scope = rememberCoroutineScope()
     val tempUnit by SettingsRepository.tempUnit.collectAsState(initial = "c")
     val showTyphoon by SettingsRepository.showTyphoon.collectAsState(initial = true)

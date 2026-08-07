@@ -51,7 +51,7 @@ object CityRepository {
     suspend fun search(query: String): List<City> {
         if (query.isBlank()) return emptyList()
         if (QWeatherApi.enabled) {
-            // 透传 CancellationException：被取消的搜索不再继续跑小米兜底（v1.2.4）
+            // 透传 CancellationException：被取消的搜索不再继续跑小米兜底（v0.0.1）
             val qw = try {
                 QWeatherApi.service.cityLookup(query)
             } catch (ce: kotlinx.coroutines.CancellationException) {

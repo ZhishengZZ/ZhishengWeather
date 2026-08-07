@@ -57,7 +57,7 @@ fun SearchScreen(
     var query by remember { mutableStateOf("") }
     var results by remember { mutableStateOf<List<City>>(emptyList()) }
     var searching by remember { mutableStateOf(false) }
-    // rememberCoroutineScope：离开搜索页自动取消挂起的搜索（v1.2.4）
+    // rememberCoroutineScope：离开搜索页自动取消挂起的搜索（v0.0.1）
     val scope = rememberCoroutineScope()
     var debounceJob by remember { mutableStateOf<Job?>(null) }
 
@@ -77,7 +77,7 @@ fun SearchScreen(
                     debounceJob = scope.launch {
                         delay(350)
                         searching = true
-                        // 透传 CancellationException：被新输入取消的旧搜索不再写空结果覆盖新结果（v1.2.4）
+                        // 透传 CancellationException：被新输入取消的旧搜索不再写空结果覆盖新结果（v0.0.1）
                         results = try {
                             CityRepository.search(q)
                         } catch (ce: CancellationException) {

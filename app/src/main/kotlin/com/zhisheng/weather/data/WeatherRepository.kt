@@ -33,8 +33,8 @@ object WeatherRepository {
 
     // —— 和风天气主路径 ——
     // 每路请求带 1 次重试：手机网络下偶发超时/连接抖动若无重试，
-    // 对应区块会静默消失（v1.2.2 修复：平舆丢月相即 daily 单发失败所致）
-    // v1.2.3：透传 CancellationException（城市切换取消）；4xx 不重试（海外 minutely 400 等确定性失败）
+    // 对应区块会静默消失（v0.0.1 修复：平舆丢月相即 daily 单发失败所致）
+    // v0.0.1：透传 CancellationException（城市切换取消）；4xx 不重试（海外 minutely 400 等确定性失败）
     private suspend fun <T> qwRetry(times: Int = 2, block: suspend () -> T?): T? {
         repeat(times) { i ->
             try {
@@ -69,7 +69,7 @@ object WeatherRepository {
             val minutely = async { qwRetry { svc.minutely(QWeatherApi.lonLat(city)) } }
             val indices = async { qwRetry { svc.indices(QWeatherApi.lonLat(city), "1,2,3,9") } }
             // 小米源补：昨日复盘 + 台风 + 逐日扩展（按城市名反查小米 key，取距离最近命中，
-            // 防同名异地串台——v1.2.4 修复：金川区(金昌)显示四川金川县预警）
+            // 防同名异地串台——v0.0.1 修复：金川区(金昌)显示四川金川县预警）
             val supp = async {
                 try {
                     val key = nearestXiaomiKey(city.name, city.latitude, city.longitude)
@@ -100,7 +100,7 @@ object WeatherRepository {
             val ix = indices.await()
             val s = supp.await()
 
-            // v1.2.3：单路失败留痕，logcat 可查（此前区块静默消失无从定位）
+            // v0.0.1：单路失败留痕，logcat 可查（此前区块静默消失无从定位）
             val missing = buildList {
                 if (d == null) add("daily")
                 if (h == null) add("hourly")
@@ -264,7 +264,7 @@ object WeatherRepository {
         air.pollutants.firstOrNull { it.code == code }
             ?.concentration?.value?.let { if (it == it.toInt().toDouble()) it.toInt().toString() else it.toString() }
 
-    // 和风新版单位换算：优先用 API 返回的 unit 字段判定（v1.2.4：启发式会把大雾
+    // 和风新版单位换算：优先用 API 返回的 unit 字段判定（v0.0.1：启发式会把大雾
     // 能见度 500m 误显示成 500km），unit 缺失时才退回启发式
     private fun speedKmh(v: QwVal?): Double? = v?.value?.let {
         when (v.unit?.lowercase()) {
@@ -285,7 +285,7 @@ object WeatherRepository {
 
     // —— 小米源兜底路径（原有逻辑） ——
     private suspend fun fetchXiaomi(city: City): WeatherData = try {
-        // 兜底链路同样带重试：此前单次请求一抖就整屏红字，比主链路还脆弱（v1.2.4）
+        // 兜底链路同样带重试：此前单次请求一抖就整屏红字，比主链路还脆弱（v0.0.1）
         val result = qwRetry {
             XiaomiApi.instance.getWeather(
                 latitude = city.latitude,
@@ -326,14 +326,14 @@ object WeatherRepository {
     }
 
     // 小米 key 形如 "weathercn:xxx"/"accu:xxx"；和风搜索存下的是和风 id（纯数字），
-    // 直接拿去调小米接口会返回全空（v1.2.3 修复：和风整体失败时和风搜索的城市整屏空白）
+    // 直接拿去调小米接口会返回全空（v0.0.1 修复：和风整体失败时和风搜索的城市整屏空白）
     private suspend fun resolveXiaomiKey(city: City): String {
         if (city.locationKey.contains(":")) return city.locationKey
         return nearestXiaomiKey(city.name, city.latitude, city.longitude) ?: city.locationKey
     }
 
     // 按城市名反查小米 key：同名异地（金川区/金川县、朝阳…）必须取距离最近的命中，
-    // 且超过 150km 视为无匹配，宁可缺数据也不串城市（v1.2.4）
+    // 且超过 150km 视为无匹配，宁可缺数据也不串城市（v0.0.1）
     private const val XIAOMI_MATCH_MAX_KM = 150.0
 
     private suspend fun nearestXiaomiKey(name: String, lat: Double, lon: Double): String? = try {
@@ -464,7 +464,7 @@ object WeatherRepository {
         return buildList {
             val highs = r.forecastDaily?.temperature?.value
             val codes = r.forecastDaily?.weather?.value
-            // pubTime 解析失败退回当日 0 点，避免逐日日期全部掉回 1970（v1.2.4）
+            // pubTime 解析失败退回当日 0 点，避免逐日日期全部掉回 1970（v0.0.1）
             val start = parseTimeMillis(r.forecastDaily?.pubTime).takeIf { it != 0L }
                 ?: todayStartMillis()
             val n = minOf(highs?.size ?: 0, codes?.size ?: 0, 15)
@@ -496,7 +496,7 @@ object WeatherRepository {
                 condition = WeatherCondition.fromCode(cur.weather),
                 weatherText = WeatherCondition.fromCode(cur.weather).label,
                 humidity = cur.humidity?.value?.toDoubleOrNull(),
-                // 小米风速带 unit 字段：km/h 透传，m/s 换算（v1.2.4）
+                // 小米风速带 unit 字段：km/h 透传，m/s 换算（v0.0.1）
                 windSpeed = cur.wind?.speed?.let { w ->
                     w.value?.toDoubleOrNull()?.let { v -> if (w.unit == "m/s") v * 3.6 else v }
                 },

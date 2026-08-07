@@ -19,7 +19,7 @@
 > 满血版（和风主源：分钟级降水图 / 穿衣感冒指数等）需源码构建并自备凭据。
 
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-1.2.5-FF6F1E?style=flat-square"/>
+  <img alt="version" src="https://img.shields.io/badge/version-0.0.1_Preview-FF6F1E?style=flat-square"/>
   <img alt="license" src="https://img.shields.io/badge/license-MIT-3BFF8C?style=flat-square"/>
   <img alt="release" src="https://img.shields.io/github/v/release/ZhishengZZ/ZhishengWeather?style=flat-square&color=FF6F1E"/>
   <img alt="build" src="https://img.shields.io/github/actions/workflow/status/ZhishengZZ/ZhishengWeather/.github/workflows/build.yml?style=flat-square&label=BUILD"/>
@@ -157,24 +157,11 @@ keystore.key_password=<...>
 
 ## 09// 版本记录 CHANGELOG
 
-**v1.2.5**（当前）
+**v0.0.1 Preview**（当前）
 
-- 零配置体验：首装种子默认城市北京，装好即有天气（无凭据自动降级小米源 + Open-Meteo）
-- 新增 `-PpublicBuild` 公开版构建链路：凭据强制为空 + 随库公开证书 `keystore/public.jks`
-- Release 发布公开版 APK，零配置安装即用
-
-**v1.2.4**
-
-- 同名城市串台修复：小米按名反查改为取最近距离命中，超 150km 视为无匹配；城市抽屉显示省份归属
-- 全新图标系统：15 枚单色青双色调终端风图标，替换旧矢量图
-- 逐时预报引入 Open-Meteo 兜底，修复部分城市逐时缺失
-- 一批健壮性修复：单位换算改读接口 unit 字段、搜索竞态、JWT 并发取 token、失败重试
-
-**v1.2.3**
-
-- 15 天逐日补齐：Open-Meteo 全球兜底，东京这类海外城市也凑满
-- 月相本地计算兜底（Meeus 天文算法），不再依赖某个源是否给字段
-- 切城市立即取消旧请求，不再串数据
+- 首个公开预览：磷光终端 UI · 15 枚 AI 生成图标 · 三源数据融合（和风 / 小米 / Open-Meteo）
+- 零配置体验：首装种子默认城市，无凭据自动降级公共源
+- `-PpublicBuild` 公开版构建链路 + 随库公开证书，Release 附公开版 APK
 
 更早的改动见 commit 历史。
 

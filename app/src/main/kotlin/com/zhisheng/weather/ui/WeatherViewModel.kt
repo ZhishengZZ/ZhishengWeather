@@ -35,7 +35,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     private var lastFetchAt: Long = 0L
 
     // 同一时间只保留一次抓取：换城市立即取消旧任务，
-    // 避免新旧城市结果乱序覆盖（v1.2.3：切城市偶发数据错乱的修复）
+    // 避免新旧城市结果乱序覆盖（v0.0.1：切城市偶发数据错乱的修复）
     private var fetchJob: kotlinx.coroutines.Job? = null
 
     val cities: StateFlow<List<City>> = CityRepository.cities
@@ -72,7 +72,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     }
 
     // force=false 用于 ON_RESUME 自动刷新：同城 10 分钟内不重复拉，
-    // 避免与启动时 selectedCity 首发射叠加成双份请求（v1.2.4）
+    // 避免与启动时 selectedCity 首发射叠加成双份请求（v0.0.1）
     fun refresh(city: City? = null, force: Boolean = true) {
         val target = city ?: selectedCity.value ?: return
         val now = System.currentTimeMillis()
