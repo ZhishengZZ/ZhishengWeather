@@ -1207,17 +1207,57 @@ private fun BootState() {
 
 @Composable
 private fun EmptyState(onSearchClick: () -> Unit) {
+    // 终端打字序列：与开屏 BootState 同款，逐字敲出 + █ 光标；文案不点名任何具体城市
+    val lines = listOf(
+        "NO CITY // 未接入城市",
+        "SEARCH ANY CITY // 输入任意城市名",
+        "AWAITING INPUT ...",
+    )
+    var doneCount by remember { mutableStateOf(0) }
+    var chars by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) {
+        lines.forEachIndexed { i, l ->
+            chars = 0
+            l.indices.forEach { c ->
+                kotlinx.coroutines.delay(26)
+                chars = c + 1
+            }
+            kotlinx.coroutines.delay(240)
+            doneCount = i + 1
+        }
+    }
     Column(
         modifier = Modifier.fillMaxSize().padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         WeatherIcon(WeatherCondition.CLEAR, Modifier.size(64.dp).alpha(0.6f))
-        Spacer(Modifier.height(20.dp))
-        Text("添加一个城市开始", style = MaterialTheme.typography.titleMedium, color = ZhishengText)
-        Spacer(Modifier.height(6.dp))
-        Text("搜索例如「金昌」「兰州」", style = MaterialTheme.typography.bodySmall, color = ZhishengTextSecondary)
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(24.dp))
+        Column(Modifier.align(Alignment.Start)) {
+            lines.take(doneCount).forEach { l ->
+                Text(
+                    "> $l",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = ZhishengMint,
+                    letterSpacing = 1.sp,
+                )
+                Spacer(Modifier.height(6.dp))
+            }
+            if (doneCount < lines.size) {
+                Text(
+                    "> " + lines[doneCount].take(chars),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = ZhishengMint,
+                    letterSpacing = 1.sp,
+                )
+            }
+            Text(
+                "█",
+                style = MaterialTheme.typography.bodySmall,
+                color = ZhishengMint,
+            )
+        }
+        Spacer(Modifier.height(24.dp))
         Box(
             Modifier
                 .clip(RectangleShape)

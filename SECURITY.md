@@ -27,3 +27,5 @@
 - 构建产物（APK）会内嵌凭据，**请勿公开发布你带凭据构建的 APK**
 - Release 附带的官方公开版 APK 以 `-PpublicBuild` 构建：凭据为空 + 随库公开证书 `keystore/public.jks`，不含任何个人凭据，可放心安装
 - 若在仓库历史中发现任何凭据痕迹，请按安全漏洞上报，勿公开扩散
+
+<!-- ZHISHENG WEATHER TERMINAL // preview housekeeping -->

@@ -176,3 +176,5 @@ keystore.key_password=<...>
 ---
 
 <p align="center"><sub>ZHISHENG WEATHER TERMINAL // PATTERN BLUE · made with phosphor & kotlin</sub></p>
+
+<!-- ZHISHENG WEATHER TERMINAL // preview housekeeping -->
