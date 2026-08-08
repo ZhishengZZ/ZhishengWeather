@@ -2,14 +2,16 @@
 
 <p align="center">
   <b>把天气摆在第一屏。</b><br/>
-  一个黑底终端风的 Android 天气 App。没有广告，不用登录，装好就能看。
+  一个磷光终端风的 Android 天气 App。没有广告，不用登录，装好就能看。
 </p>
 
 <p align="center">
-  <a href="https://github.com/ZhishengZZ/ZhishengWeather/releases/download/v0.0.2/zhisheng-weather-v0.0.2.apk"><b>下载枳生天气 0.0.2</b></a>
+  <a href="https://github.com/ZhishengZZ/ZhishengWeather/releases/download/v0.0.2/zhisheng-weather-v0.0.2.apk"><b>下载公共版 0.0.2</b></a>
   · <a href="#安装">安装说明</a>
   · <a href="README.en.md">English</a>
 </p>
+
+<p align="center"><sub>Release 提供免配置公共版；自备和风天气凭据，可从源码构建满血版。</sub></p>
 
 <p align="center">
   <img alt="Android 8.0+" src="https://img.shields.io/badge/Android-8.0%2B-3BFF8C?style=flat-square"/>
@@ -45,7 +47,7 @@
 
 我不想先看开屏广告，也不想为了看天气注册账号。于是我给自己写了枳生天气。打开 App，实况、预警、逐时变化和未来几天的趋势都在前面；想看湿度、气压、空气质量和生活指数，接着往下滑就行。
 
-界面也是照自己的喜好做的。黑底、细线、单色磷光，高信息密度，没有大块图片占掉半个屏幕。它不是所有人都会喜欢的样子，但喜欢终端界面的人，大概一眼就知道它在做什么。
+界面也是照自己的喜好做的。黑色底、细线、单色磷光，高信息密度，没有大块图片占掉半个屏幕。它不是所有人都会喜欢的样子，但喜欢磷光终端界面的人，大概一眼就知道它在做什么。
 
 ## 出门前能看什么
 
@@ -61,7 +63,7 @@
 
 ## 图标也是界面的一部分
 
-<p align="center"><img src="assets/icons_grid.png" width="560" alt="枳生天气终端风天气图标"/></p>
+<p align="center"><img src="assets/icons_grid.png" width="560" alt="枳生天气磷光终端风天气图标"/></p>
 
 这组图标不是从现成图标库里拼出来的。15 枚天气图标最初由生成模型产出，再经过本地处理：去黑底、转透明、修边、统一到 512 px，最后按白天和夜间状态接进 App。
 
@@ -71,6 +73,19 @@
 
 它们沿用界面的青色磷光，在黑底上保持同一套轮廓和明暗关系。
 
+## 公共版和满血版
+
+GitHub Release 里提供的是公共版。它不是试用包：实况、24 小时预报、15 天趋势、空气质量、15 分钟降水、城市搜索和桌面小组件都能直接使用。
+
+| | 公共版 | 满血版 |
+|:--|:--|:--|
+| 怎么获得 | 从 [Release](https://github.com/ZhishengZZ/ZhishengWeather/releases/tag/v0.0.2) 直接下载 | 拉取源码后自行构建 |
+| 数据链路 | Open-Meteo + 小米天气 | 和风天气主源 + 小米天气、Open-Meteo 补充 |
+| 是否需要配置 | 不需要 | 需要自己的和风天气 Ed25519 凭据 |
+| 主要区别 | 开箱即用，和风独占项目留空 | 可显示和风官方预警、分钟级降水和生活指数，具体取决于账号接口权限 |
+
+只想装上使用，下载公共版即可。满血版不能预先打包进 Release，因为开发者凭据不能跟着 APK 一起公开。
+
 ## 安装
 
 1. [下载 `zhisheng-weather-v0.0.2.apk`](https://github.com/ZhishengZZ/ZhishengWeather/releases/download/v0.0.2/zhisheng-weather-v0.0.2.apk)（约 12 MB）。
@@ -79,7 +94,7 @@
 
 APK 目前只在 GitHub 发布，所以 Android 会提示允许“未知来源应用”。这是安装渠道提示，不是 App 额外申请的权限。首次打开会先显示北京，之后可以搜索并保存自己的城市。
 
-公开 APK 不附带和风天气密钥，但小米天气和 Open-Meteo 无需配置即可使用。想接入自己的和风天气账号，可以按后面的步骤从源码构建。
+上面的 APK 是公共版，不附带和风天气密钥。想接入自己的和风天气账号，可以按后面的步骤构建满血版。
 
 ## 0.0.2 改了什么
 
@@ -124,16 +139,9 @@ APK 目前只在 GitHub 发布，所以 Android 会提示允许“未知来源�
 ```bash
 git clone https://github.com/ZhishengZZ/ZhishengWeather.git
 cd ZhishengWeather
-./gradlew assembleDebug
 ```
 
-Windows：
-
-```powershell
-.\gradlew.bat assembleDebug
-```
-
-不配置和风天气也能编译和使用。Android SDK 路径以及可选的和风凭据放在根目录的 `local.properties` 中；这个文件已被 Git 忽略。
+构建满血版时，把 Android SDK 路径和自己的和风凭据放在根目录的 `local.properties` 中；这个文件已被 Git 忽略。
 
 ```properties
 sdk.dir=<Android SDK 路径>
@@ -143,10 +151,19 @@ qw.kid=<Key ID>
 qw.private_key=<Ed25519 私钥，单行>
 ```
 
-公开发布构建：
+然后构建调试包：
 
 ```bash
-./gradlew assembleRelease -PpublicBuild
+./gradlew assembleDebug
+```
+
+Windows 使用 `.\gradlew.bat assembleDebug`。只要 `local.properties` 中的和风凭据有效，这个包就是满血版；不填凭据也能运行，但会使用与公共版相同的免密钥数据链路。
+
+发布构建分为两种：
+
+```bash
+./gradlew assembleRelease                 # 满血版；需要自备 keystore/zhisheng.jks
+./gradlew assembleRelease -PpublicBuild   # 公共版；强制清空和风凭据
 ```
 
 `-PpublicBuild` 会清空和风凭据，并使用仓库中的公开签名文件。这个签名只用于让公开构建之间能够覆盖升级，不应当被当作私密或可信的身份凭证。

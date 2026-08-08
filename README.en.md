@@ -2,14 +2,16 @@
 
 <p align="center">
   <b>Weather belongs on the first screen.</b><br/>
-  A dark, terminal-style weather app for Android. No ads, no account, ready after install.
+  A phosphor-terminal weather app for Android. No ads, no account, ready after install.
 </p>
 
 <p align="center">
-  <a href="https://github.com/ZhishengZZ/ZhishengWeather/releases/download/v0.0.2/zhisheng-weather-v0.0.2.apk"><b>Download Zhisheng Weather 0.0.2</b></a>
+  <a href="https://github.com/ZhishengZZ/ZhishengWeather/releases/download/v0.0.2/zhisheng-weather-v0.0.2.apk"><b>Download the public build 0.0.2</b></a>
   · <a href="#install">Install</a>
   · <a href="README.md">简体中文</a>
 </p>
+
+<p align="center"><sub>Releases provide the zero-config public build. Add your own QWeather credentials to build the full edition from source.</sub></p>
 
 <p align="center">
   <img alt="Android 8.0+" src="https://img.shields.io/badge/Android-8.0%2B-3BFF8C?style=flat-square"/>
@@ -71,6 +73,19 @@ These are not stock icons assembled from a library. The set contains 15 weather 
 
 They keep the same cyan phosphor and edge treatment as the rest of the interface.
 
+## Public and full builds
+
+GitHub Releases carry the public build. It is not a trial: current conditions, the 24-hour forecast, 15-day outlook, air quality, 15-minute precipitation, city search, and home-screen widgets all work without configuration.
+
+| | Public build | Full QWeather build |
+|:--|:--|:--|
+| How to get it | Download it from the [v0.0.2 release](https://github.com/ZhishengZZ/ZhishengWeather/releases/tag/v0.0.2) | Clone the source and build it yourself |
+| Data path | Open-Meteo + Xiaomi Weather | QWeather as primary, with Xiaomi Weather and Open-Meteo as supplements |
+| Setup | None | Your own QWeather Ed25519 credentials |
+| Main difference | Ready to use; QWeather-only fields stay empty | QWeather alerts, minute-level precipitation, and life indices, subject to your account's API access |
+
+If you only want to use the app, download the public build. The full build cannot be shipped preconfigured because developer credentials must not be bundled in a public APK.
+
 ## Install
 
 1. [Download `zhisheng-weather-v0.0.2.apk`](https://github.com/ZhishengZZ/ZhishengWeather/releases/download/v0.0.2/zhisheng-weather-v0.0.2.apk) (about 12 MB).
@@ -79,7 +94,7 @@ They keep the same cyan phosphor and edge treatment as the rest of the interface
 
 The APK is distributed on GitHub rather than through an app store, so Android will ask you to allow installation from an unknown source. That is an install-channel warning, not an extra permission requested by the app. Beijing is shown on first launch; you can then search for and save your own cities.
 
-The public APK contains no QWeather credentials. Xiaomi Weather and Open-Meteo work without setup. If you want to use your own QWeather account, build from source using the instructions below.
+The APK above is the public build and contains no QWeather credentials. To use your own QWeather account, follow the source-build instructions for the full edition.
 
 ## What changed in 0.0.2
 
@@ -124,16 +139,9 @@ You need JDK 17 and Android SDK 34. The Gradle Wrapper is included.
 ```bash
 git clone https://github.com/ZhishengZZ/ZhishengWeather.git
 cd ZhishengWeather
-./gradlew assembleDebug
 ```
 
-On Windows:
-
-```powershell
-.\gradlew.bat assembleDebug
-```
-
-The app builds and runs without QWeather credentials. Put the Android SDK path and optional QWeather configuration in the ignored root-level `local.properties` file.
+For a full build, put the Android SDK path and your QWeather credentials in the ignored root-level `local.properties` file.
 
 ```properties
 sdk.dir=<Android SDK path>
@@ -143,10 +151,19 @@ qw.kid=<Key ID>
 qw.private_key=<single-line Ed25519 private key>
 ```
 
-For the public release variant:
+Then build a debug APK:
 
 ```bash
-./gradlew assembleRelease -PpublicBuild
+./gradlew assembleDebug
+```
+
+On Windows, use `.\gradlew.bat assembleDebug`. With valid QWeather credentials in `local.properties`, this is the full build. It still runs without them, using the same key-free data path as the public build.
+
+There are two release commands:
+
+```bash
+./gradlew assembleRelease                 # full build; bring your own keystore/zhisheng.jks
+./gradlew assembleRelease -PpublicBuild   # public build; QWeather credentials forcibly cleared
 ```
 
 `-PpublicBuild` clears QWeather credentials and uses the public signing file stored in the repository. That signature only keeps public builds upgrade-compatible; it is not a private or trusted identity credential.
