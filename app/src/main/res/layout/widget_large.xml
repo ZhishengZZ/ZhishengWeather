@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 4x4 大号：实况 + 未来四小时 + 三日预报 + AQI -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:orientation="vertical"
+    android:padding="14dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <View
+            android:layout_width="3dp"
+            android:layout_height="10dp"
+            android:background="@drawable/widget_accent" />
+
+        <TextView
+            android:id="@+id/w_city"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:fontFamily="monospace"
+            android:textColor="#FFFF9830"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:text="枳生天气" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:fontFamily="monospace"
+            android:textColor="#FF7E8A7E"
+            android:textSize="9sp"
+            android:maxLines="1"
+            android:text="ZHISHENG WEATHER TERMINAL" />
+
+        <TextView
+            android:id="@+id/w_upd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:textColor="#FF7E8A7E"
+            android:textSize="9sp"
+            android:text="UPD --" />
+    </LinearLayout>
+
+    <!-- 实况 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/w_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textColor="#FFE8F0E8"
+                android:textSize="44sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:text="--" />
+
+            <TextView
+                android:id="@+id/w_range"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textColor="#FFC8D8C8"
+                android:textSize="11sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:text="--" />
+
+            <TextView
+                android:id="@+id/w_aqi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:fontFamily="monospace"
+                android:textColor="#FF20F0FF"
+                android:textSize="10sp"
+                android:visibility="gone"
+                android:text="AQI --" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/w_icon"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:contentDescription="@string/widget_icon_desc"
+            android:src="@drawable/weather_cloud" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="8dp"
+        android:background="@drawable/widget_rule" />
+
+    <!-- 未来四小时 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <include layout="@layout/widget_hour_1" />
+        <include layout="@layout/widget_hour_2" />
+        <include layout="@layout/widget_hour_3" />
+        <include layout="@layout/widget_hour_4" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="8dp"
+        android:background="@drawable/widget_rule" />
+
+    <!-- 三日预报 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <include layout="@layout/widget_day_1" />
+        <include layout="@layout/widget_day_2" />
+        <include layout="@layout/widget_day_3" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 4x2 中号：左侧实况，右侧未来四小时 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <View
+            android:layout_width="3dp"
+            android:layout_height="10dp"
+            android:background="@drawable/widget_accent" />
+
+        <TextView
+            android:id="@+id/w_city"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:fontFamily="monospace"
+            android:textColor="#FFFF9830"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:text="枳生天气" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:fontFamily="monospace"
+            android:textColor="#FF7E8A7E"
+            android:textSize="9sp"
+            android:maxLines="1"
+            android:text="ZHISHENG WEATHER TERMINAL" />
+
+        <TextView
+            android:id="@+id/w_upd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:textColor="#FF7E8A7E"
+            android:textSize="9sp"
+            android:text="UPD --" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal">
+
+        <!-- 左：实况 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.95"
+            android:orientation="vertical"
+            android:gravity="center_vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/w_temp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:textColor="#FFE8F0E8"
+                    android:textSize="38sp"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:text="--" />
+
+                <ImageView
+                    android:id="@+id/w_icon"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_marginStart="8dp"
+                    android:contentDescription="@string/widget_icon_desc"
+                    android:src="@drawable/weather_cloud" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/w_range"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textColor="#FFC8D8C8"
+                android:textSize="11sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:text="--" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginHorizontal="10dp"
+            android:background="@drawable/widget_rule" />
+
+        <!-- 右：未来四小时 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1.05"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <include layout="@layout/widget_hour_1" />
+            <include layout="@layout/widget_hour_2" />
+            <include layout="@layout/widget_hour_3" />
+            <include layout="@layout/widget_hour_4" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
