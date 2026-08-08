@@ -18,6 +18,16 @@ interface XiaomiApi {
         @Query("locale") locale: String = "zh_CN",
     ): List<XiaomiLocationResult>
 
+    // 按坐标反查城市（定位用，免 key）：返回 name/affiliation/locationKey
+    @GET("location/city/geo")
+    suspend fun geoCity(
+        @Query("latitude") latitude: Double,
+        @Query("longitude") longitude: Double,
+        @Query("locale") locale: String = "zh_CN",
+        @Query("appKey") appKey: String = APP_KEY,
+        @Query("sign") sign: String = SIGN,
+    ): List<XiaomiLocationResult>
+
     @GET("weather/all")
     suspend fun getWeather(
         @Query("latitude") latitude: Double,

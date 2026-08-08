@@ -21,15 +21,33 @@ import java.time.format.DateTimeFormatter
 // 和风不可用（未配置凭据/网络失败）时整体回退小米源。
 object WeatherRepository {
 
-    suspend fun fetchWeather(city: City): WeatherData {
-        val data = if (QWeatherApi.enabled) {
-            fetchQWeather(city) ?: fetchXiaomi(city)
-        } else {
-            fetchXiaomi(city)
+    // v0.0.2：数据源可选。AUTO 保持既有降级链；手动锁定时只打那一个源，
+    // 失败就如实报错，不静默串到别的源（用户选了就该看到那个源的真实状态）。
+    suspend fun fetchWeather(city: City, pref: SourcePref = SourcePref.AUTO): WeatherData {
+        val data = when (pref) {
+            SourcePref.QWEATHER ->
+                if (QWeatherApi.enabled) {
+                    fetchQWeather(city) ?: WeatherData(error = "和风天气请求失败（检查凭据与网络）")
+                } else {
+                    WeatherData(error = "未配置和风凭据：请在设置里改用小米源或公共源")
+                }
+            SourcePref.XIAOMI -> fetchXiaomi(city)
+            SourcePref.OPEN_METEO -> OpenMeteoSource.fetch(city)
+            SourcePref.AUTO ->
+                if (QWeatherApi.enabled) {
+                    fetchQWeather(city) ?: fetchXiaomi(city).ifFailed { OpenMeteoSource.fetch(city) }
+                } else {
+                    fetchXiaomi(city).ifFailed { OpenMeteoSource.fetch(city) }
+                }
         }
         // 逐日不足 15 天用 Open-Meteo 补齐（海外城市小米源天数少的兜底）
         return backfillHourly(backfillDaily(data, city), city)
     }
+
+    // 小米源失败时再落一层公共源：此前和风+小米双失败会直接整屏红字（v0.0.2）
+    private suspend inline fun WeatherData.ifFailed(
+        block: suspend () -> WeatherData,
+    ): WeatherData = if (error != null || current == null) block() else this
 
     // —— 和风天气主路径 ——
     // 每路请求带 1 次重试：手机网络下偶发超时/连接抖动若无重试，
@@ -130,6 +148,7 @@ object WeatherRepository {
                         dateMillis = t,
                         high = dd.temperatureMax?.value,
                         low = dd.temperatureMin?.value,
+                        // 逐日行代表整天，固定用白天条件（不取 icon 的夜间变体）
                         condition = WeatherCondition.fromQwCode(dd.daytime?.condition?.code),
                         windSpeed = speedKmh(dd.daytime?.wind?.speed),
                         precipProbability = dd.daytime?.precipitation?.probability,
@@ -152,7 +171,7 @@ object WeatherRepository {
                 current = CurrentWeather(
                     temperature = cur.temperature?.value,
                     feelsLike = cur.feelsLike?.value,
-                    condition = WeatherCondition.fromQwCode(cur.condition?.code),
+                    condition = WeatherCondition.fromQw(cur.condition?.icon, cur.condition?.code),
                     weatherText = cur.condition?.text,
                     humidity = pct(cur.humidity),
                     windSpeed = speedKmh(cur.wind?.speed),
@@ -170,7 +189,7 @@ object WeatherRepository {
                     if (t == 0L) null else HourlyWeather(
                         timeMillis = t,
                         temperature = hh.temperature?.value,
-                        condition = WeatherCondition.fromQwCode(hh.condition?.code),
+                        condition = WeatherCondition.fromQw(hh.condition?.icon, hh.condition?.code),
                         windSpeed = speedKmh(hh.wind?.speed),
                         precipProb = hh.precipitation?.probability,
                     )
@@ -472,11 +491,17 @@ object WeatherRepository {
                 val t = highs?.getOrNull(i)
                 val w = codes?.getOrNull(i)
                 val sun = dailySun?.getOrNull(i)
+                // from/to 哪个是高温不固定（小米各城市返回顺序不一致），按数值大小定
+                // 而不是按字段名，否则逐日行会出现「低 31° / 高 22°」的倒挂（v0.0.2）
+                val a = t?.from?.toDoubleOrNull()
+                val b = t?.to?.toDoubleOrNull()
+                val hiT = if (a != null && b != null) maxOf(a, b) else a ?: b
+                val loT = if (a != null && b != null) minOf(a, b) else b ?: a
                 add(
                     DailyWeather(
                         dateMillis = start + i * 86400_000L,
-                        high = t?.from?.toDoubleOrNull(),
-                        low = t?.to?.toDoubleOrNull(),
+                        high = hiT,
+                        low = loT,
                         condition = WeatherCondition.fromCode(w?.from),
                         windSpeed = dailyWindSpeed?.getOrNull(i)?.from?.toDoubleOrNull(),
                         precipProbability = dailyPrecip?.getOrNull(i)?.toIntOrNull(),

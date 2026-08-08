@@ -8,8 +8,14 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class QwVal(val value: Double? = null, val unit: String? = null)
 
+// icon 才带昼夜变体（晴天白天 100 / 夜间 150），code 恒为白天码。
+// 只读 code 会让夜里显示太阳（v0.0.2 修复），故两者都收，优先用 icon。
 @Serializable
-data class QwCondition(val text: String? = null, val code: String? = null)
+data class QwCondition(
+    val text: String? = null,
+    val code: String? = null,
+    val icon: String? = null,
+)
 
 @Serializable
 data class QwWindDir(val degree: Double? = null, val compass: String? = null)

@@ -73,20 +73,30 @@ object CityRepository {
             }.orEmpty()
             if (qwList.isNotEmpty()) return qwList
         }
-        return XiaomiApi.instance.searchCity(query)
-            .filter { it.status == 0 }
-            .mapNotNull {
-                val lat = it.latitude?.toDoubleOrNull() ?: return@mapNotNull null
-                val lon = it.longitude?.toDoubleOrNull() ?: return@mapNotNull null
-                val key = it.locationKey ?: return@mapNotNull null
-                City(
-                    name = it.name ?: "",
-                    affiliation = it.affiliation ?: "",
-                    latitude = lat,
-                    longitude = lon,
-                    locationKey = key,
-                )
-            }
+        val xiaomi = try {
+            XiaomiApi.instance.searchCity(query)
+                .filter { it.status == 0 }
+                .mapNotNull {
+                    val lat = it.latitude?.toDoubleOrNull() ?: return@mapNotNull null
+                    val lon = it.longitude?.toDoubleOrNull() ?: return@mapNotNull null
+                    val key = it.locationKey ?: return@mapNotNull null
+                    City(
+                        name = it.name ?: "",
+                        affiliation = it.affiliation ?: "",
+                        latitude = lat,
+                        longitude = lon,
+                        locationKey = key,
+                    )
+                }
+        } catch (ce: kotlinx.coroutines.CancellationException) {
+            throw ce
+        } catch (_: Exception) {
+            emptyList()
+        }
+        if (xiaomi.isNotEmpty()) return xiaomi
+        // 最后落公共源 Geocoding：和风无凭据 + 小米不可达（海外网络）时仍能搜到城市，
+        // 否则这类用户连一个城市都加不进来（v0.0.2）
+        return OpenMeteoSource.searchCity(query)
     }
 
     // 已保存城市
