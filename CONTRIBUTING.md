@@ -21,8 +21,8 @@ Small project, simple rules — a few notes below.*
 
 - 需要 JDK 17、Android SDK 34，Gradle Wrapper 自带，clone 下来直接 `./gradlew assembleDebug` 就能跑。
   *Needs JDK 17 and Android SDK 34; the wrapper is included — clone and `./gradlew assembleDebug` just runs.*
-- 用和风天气的话，在根目录建 `local.properties` 填凭据（见 README `07//`）；不填也能编译。
-  *For the QWeather feed, drop your credentials into `local.properties` at the root (see README `07//`); it compiles fine without them.*
+- 用和风天气的话，在根目录建 `local.properties` 填凭据（见 README 的“从源码构建”）；不填也能编译。
+  *For the QWeather feed, put your credentials in the root-level `local.properties` file (see “Build from source” in the README); the project also builds without them.*
 - 主题色统一引用 `ui/theme/Color.kt`，别硬编码色值。
   *Pull theme colors from `ui/theme/Color.kt`; never hardcode hex values.*
 - 网络模型和领域模型分开（`data/*Models.kt` vs `model/Weather.kt`）。
@@ -66,8 +66,8 @@ Small project, simple rules — a few notes below.*
 
 ## 06// 安全红线 SECURITY
 
-- **永不提交** `local.properties`、`keystore/`、任何 Key / 私钥 / 口令
-  *Never commit `local.properties`, `keystore/`, or any key / private key / password.*
+- **永不提交** `local.properties`、私有签名文件、任何 Key / 私钥 / 口令；仓库中的 `keystore/public.jks` 是公开构建专用的例外
+  *Never commit `local.properties`, private signing files, keys, private keys, or passwords. The in-repo `keystore/public.jks` is the deliberate public-build exception.*
 - 发现已泄露凭据：先轮换密钥，再走 SECURITY.md 通道私下联系维护者，别在 Issue 里喊
   *If you find leaked credentials: rotate them first, then contact the maintainer privately via the SECURITY.md channel — not in a public issue.*
 
