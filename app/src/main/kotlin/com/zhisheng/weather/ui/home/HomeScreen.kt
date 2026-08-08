@@ -5,6 +5,10 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -50,6 +54,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -67,6 +72,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -86,6 +92,7 @@ import com.zhisheng.weather.ui.Fmt
 import com.zhisheng.weather.ui.HomeUiState
 import com.zhisheng.weather.ui.WeatherViewModel
 import com.zhisheng.weather.ui.components.WeatherIcon
+import com.zhisheng.weather.ui.components.WeatherAmbience
 import com.zhisheng.weather.ui.theme.ZhishengBg
 import com.zhisheng.weather.ui.theme.ZhishengCard
 import com.zhisheng.weather.ui.theme.ZhishengCardBorder
@@ -143,6 +150,11 @@ fun HomeScreen(
             scope.launch { drawerState.close() }
         }
         Box(modifier = Modifier.fillMaxSize().background(ZhishengBg)) {
+            // 氛围层在最底：内容之上不绘制任何东西，永远不遮读数（v0.0.2）
+            WeatherAmbience(
+                condition = uiState.weather?.current?.condition,
+                level = uiState.prefs.ambience,
+            )
             Column(modifier = Modifier.fillMaxSize()) {
                 TopBar(
                     cityName = uiState.selectedCity?.name ?: "枳生天气",
@@ -173,6 +185,7 @@ fun HomeScreen(
                                     city = uiState.selectedCity,
                                     unit = uiState.tempUnit,
                                     showTyphoon = uiState.showTyphoon,
+                                    prefs = uiState.prefs,
                                 )
                                 else -> BootState()
                             }
@@ -180,7 +193,7 @@ fun HomeScreen(
                     }
                 }
             }
-            Scanlines()
+            if (uiState.prefs.scanlines) Scanlines()
         }
     }
 }
@@ -238,12 +251,20 @@ private fun TopBar(
                 letterSpacing = 1.5.sp,
             )
         }
+        // 刷新中持续旋转：原来是静态 360f，视觉上等于没转（v0.0.2）
+        val spin = rememberInfiniteTransition(label = "spin")
+        val angle by spin.animateFloat(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = infiniteRepeatable(tween(900, easing = LinearEasing)),
+            label = "angle",
+        )
         IconButton(onClick = onRefresh, modifier = Modifier.size(48.dp)) {
             Icon(
                 Icons.Filled.Refresh,
-                contentDescription = "刷新",
+                contentDescription = if (loading) "正在刷新" else "刷新",
                 tint = if (loading) ZhishengMint else ZhishengOrange,
-                modifier = Modifier.size(20.dp).rotate(if (loading) 360f else 0f),
+                modifier = Modifier.size(20.dp).rotate(if (loading) angle else 0f),
             )
         }
         IconButton(onClick = onSettings, modifier = Modifier.size(48.dp)) {
@@ -279,22 +300,28 @@ private fun WeatherContent(
     city: com.zhisheng.weather.model.City?,
     unit: String,
     showTyphoon: Boolean,
+    prefs: com.zhisheng.weather.ui.DisplayPrefs,
 ) {
-    val visible = listOf(
-        data.hourly.isNotEmpty(),
-        data.rainMinutes.isNotEmpty(),
-        data.daily.isNotEmpty(),
-        data.current != null,
-        data.aqi != null,
-        data.carWashOk != null || data.sportsOk != null || data.extraIndices.isNotEmpty(),
-        data.yesterday != null,
-        data.typhoons.isNotEmpty() && showTyphoon,
-    )
-    val nums = visible.runningFold(0) { acc, v -> if (v) acc + 1 else acc }.drop(1)
-
     // 入场动画总开关：状态提升到 LazyColumn 之上，只驱动一次交错入场（v0.0.1 修复快滑闪卡）
     var entered by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { entered = true }
+
+    // 区块编号改为渲染时现算：原来靠一个与渲染顺序不一致的 visible 数组预推，
+    // 某些区块缺失时编号会跳号/错位（v0.0.2）
+    var seq = 0
+    var stagger = 0
+    val nextIndex = { ++seq }
+    val nextStagger = { stagger++ }
+
+    val showHourly = data.hourly.isNotEmpty()
+    val showPrecip = prefs.showPrecip && data.rainMinutes.isNotEmpty()
+    val showDaily = data.daily.isNotEmpty()
+    val showTele = prefs.showTelemetry && data.current != null
+    val showAqi = prefs.showAqi && data.aqi != null
+    val showIndices = prefs.showIndices &&
+        (data.carWashOk != null || data.sportsOk != null || data.extraIndices.isNotEmpty())
+    val showYesterday = prefs.showYesterday && data.yesterday != null
+    val showTy = showTyphoon && data.typhoons.isNotEmpty()
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -302,44 +329,56 @@ private fun WeatherContent(
     ) {
         item { StatusLine(city, data) }
         data.current?.let { cur ->
-            item { Stagger(0, entered) { m -> HeroSection(cur, data, unit, m) } }
+            item { Stagger(nextStagger(), entered) { m -> HeroSection(cur, data, unit, prefs, m) } }
         }
         if (data.alerts.isNotEmpty()) {
-            item { Stagger(1, entered) { m -> AlertSection(data.alerts.take(3), m) } }
+            item { Stagger(nextStagger(), entered) { m -> AlertSection(data.alerts.take(3), m) } }
         }
-        if (visible[0]) {
-            item { SectionTitle(nums[0], "逐时预报", "HOURLY") }
-            item { Stagger(2, entered) { m -> HourlySection(data.hourly, unit, m) } }
+        if (showHourly) {
+            val n = nextIndex()
+            item { SectionTitle(n, "逐时预报", "HOURLY") }
+            item { Stagger(nextStagger(), entered) { m -> HourlySection(data.hourly, unit, prefs.windUnit, m) } }
         }
-        if (visible[1]) {
-            item { SectionTitle(nums[1], "分钟降水", "PRECIP") }
-            item { Stagger(3, entered) { m -> PrecipCard(data.rainMinutes, data.rainNowcast, m) } }
+        if (showPrecip) {
+            val n = nextIndex()
+            item { SectionTitle(n, "分钟降水", "PRECIP") }
+            item { Stagger(nextStagger(), entered) { m -> PrecipCard(data.rainMinutes, data.rainNowcast, m) } }
         }
-        if (visible[2]) {
-            item { SectionTitle(nums[2], "逐日预报", "FORECAST") }
-            item { Stagger(4, entered) { m -> DailySection(data.daily, unit, m) } }
+        if (showDaily) {
+            val n = nextIndex()
+            item { SectionTitle(n, "逐日预报", "FORECAST") }
+            item { Stagger(nextStagger(), entered) { m -> DailySection(data.daily, unit, prefs.windUnit, m) } }
         }
-        data.current?.let { cur ->
-            item { SectionTitle(nums[3], "遥测数据", "TELEMETRY") }
-            item { Stagger(5, entered) { m -> TelemetryGrid(cur, data.daily.firstOrNull(), unit, m) } }
+        if (showTele) {
+            val n = nextIndex()
+            item { SectionTitle(n, "遥测数据", "TELEMETRY") }
+            item {
+                Stagger(nextStagger(), entered) { m ->
+                    TelemetryGrid(data.current!!, data.daily.firstOrNull(), unit, prefs, m)
+                }
+            }
         }
-        data.aqi?.let { aqi ->
-            item { SectionTitle(nums[4], "空气质量", "AIR QUALITY") }
-            item { Stagger(6, entered) { m -> AqiCard(aqi, m) } }
+        if (showAqi) {
+            val n = nextIndex()
+            item { SectionTitle(n, "空气质量", "AIR QUALITY") }
+            item { Stagger(nextStagger(), entered) { m -> AqiCard(data.aqi!!, m) } }
         }
-        if (visible[5]) {
-            item { SectionTitle(nums[5], "生活指数", "INDICES") }
-            item { Stagger(7, entered) { m -> IndicesRow(data.carWashOk, data.sportsOk, data.extraIndices, m) } }
+        if (showIndices) {
+            val n = nextIndex()
+            item { SectionTitle(n, "生活指数", "INDICES") }
+            item { Stagger(nextStagger(), entered) { m -> IndicesRow(data.carWashOk, data.sportsOk, data.extraIndices, m) } }
         }
-        if (visible[6]) {
-            item { SectionTitle(nums[6], "昨日复盘", "RETRO") }
-            item { Stagger(8, entered) { m -> YesterdayCard(data.yesterday!!, data.daily.firstOrNull(), unit, m) } }
+        if (showYesterday) {
+            val n = nextIndex()
+            item { SectionTitle(n, "昨日复盘", "RETRO") }
+            item { Stagger(nextStagger(), entered) { m -> YesterdayCard(data.yesterday!!, data.daily.firstOrNull(), unit, m) } }
         }
-        if (visible[7]) {
-            item { SectionTitle(nums[7], "台风关注", "TYPHOON") }
-            item { Stagger(9, entered) { m -> TyphoonCard(data.typhoons, m) } }
+        if (showTy) {
+            val n = nextIndex()
+            item { SectionTitle(n, "台风关注", "TYPHOON") }
+            item { Stagger(nextStagger(), entered) { m -> TyphoonCard(data.typhoons, m) } }
         }
-        item { Stagger(10, entered) { m -> Footer(data, m) } }
+        item { Stagger(nextStagger(), entered) { m -> Footer(data, m) } }
     }
 }
 
@@ -371,7 +410,13 @@ private fun StatusLine(city: com.zhisheng.weather.model.City?, data: WeatherData
 
 // —— Hero：大温度 + 数字滚动 + 大图标 ——
 @Composable
-private fun HeroSection(cur: CurrentWeather, data: WeatherData, unit: String, modifier: Modifier) {
+private fun HeroSection(
+    cur: CurrentWeather,
+    data: WeatherData,
+    unit: String,
+    prefs: com.zhisheng.weather.ui.DisplayPrefs,
+    modifier: Modifier,
+) {
     Column(modifier = modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -396,13 +441,26 @@ private fun HeroSection(cur: CurrentWeather, data: WeatherData, unit: String, mo
                     text = buildString {
                         append("体感${Fmt.temp(cur.feelsLike, unit) ?: "--"}°")
                         if (today?.high != null && today.low != null) {
-                            append("  高${Fmt.temp(today.high, unit)}° 低${Fmt.temp(today.low, unit)}°")
+                            // 源数据偶有高低倒挂，显示前排序（v0.0.2）
+                            val hi = maxOf(today.high, today.low)
+                            val lo = minOf(today.high, today.low)
+                            append("  高${Fmt.temp(hi, unit)}° 低${Fmt.temp(lo, unit)}°")
                         }
                     },
                     style = MaterialTheme.typography.labelMedium,
                     color = ZhishengTextSecondary,
                     maxLines = 1,
                 )
+                // 风况直接进 Hero：最常看的一项，不用再往下滚到遥测区
+                windLabel(cur, prefs.windUnit)?.let { w ->
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        text = "风 $w",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = ZhishengTextTertiary,
+                        maxLines = 1,
+                    )
+                }
             }
             Box(contentAlignment = Alignment.Center) {
                 // 六边形 AT 力场底纹
@@ -467,9 +525,13 @@ private fun AnimatedTemp(celsius: Double?, unit: String) {
 // —— 预警横幅：警示斜纹 + 红边框 ——
 @Composable
 private fun AlertSection(alerts: List<AlertInfo>, modifier: Modifier) {
+    // 展开态按标题记忆：原来按列表位置 remember，预警条数变化时展开态会错位到别条（v0.0.2）
+    val expandedTitles = remember { mutableStateListOf<String>() }
+    // 单一闪烁时钟：原来每条预警各起一个 while(true)，多条预警时多个协程各自计时（v0.0.2）
+    val blinkOn = rememberBlink()
     Column(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
         alerts.forEach { alert ->
-            var expanded by remember { mutableStateOf(false) }
+            val expanded = alert.title in expandedTitles
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -477,7 +539,10 @@ private fun AlertSection(alerts: List<AlertInfo>, modifier: Modifier) {
                     .clip(RectangleShape)
                     .background(ZhishengCard)
                     .border(1.dp, ZhishengRed.copy(alpha = 0.7f), RectangleShape)
-                    .clickable { expanded = !expanded }
+                    .clickable {
+                        if (expanded) expandedTitles.remove(alert.title)
+                        else expandedTitles.add(alert.title)
+                    }
                     .padding(0.dp),
             ) {
                 // 顶部警示斜纹
@@ -488,7 +553,7 @@ private fun AlertSection(alerts: List<AlertInfo>, modifier: Modifier) {
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    BlinkDot()
+                    BlinkDot(blinkOn)
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
                         Text(alert.title, style = MaterialTheme.typography.titleSmall, color = ZhishengRed, fontWeight = FontWeight.Bold)
@@ -534,9 +599,9 @@ private fun hazardStripes(scope: DrawScope, color: Color) {
     }
 }
 
-// 1Hz 闪烁告警点
+// 1Hz 闪烁时钟：整个预警区共用一个，随 composable 离开屏幕自动停
 @Composable
-private fun BlinkDot() {
+private fun rememberBlink(): Boolean {
     var on by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -544,6 +609,11 @@ private fun BlinkDot() {
             on = !on
         }
     }
+    return on
+}
+
+@Composable
+private fun BlinkDot(on: Boolean) {
     Box(
         Modifier
             .size(8.dp)
@@ -609,17 +679,53 @@ private fun Modifier.drawCornerBrackets(color: Color) = this.then(
     }
 )
 
-// —— 逐时：横向滚动 + 温度曲线 + 降水概率 ——
+// —— 逐时：横向滚动 + 连续温度曲线 + 降水概率 ——
+// v0.0.2 重做：原实现每格各画「本格中心→本格右边」的半段贝塞尔，格与格首尾不相接，
+// 视觉上是一串断开的小弧线（用户反馈"那个线很丑"）。现改为每格画
+// 「左邻中点→本格中心→右邻中点」的连续折线 + 渐隐面积填充，跨格严丝合缝。
 @Composable
-private fun HourlySection(hourly: List<HourlyWeather>, unit: String, modifier: Modifier) {
+private fun HourlySection(
+    hourly: List<HourlyWeather>,
+    unit: String,
+    windUnit: String,
+    modifier: Modifier,
+) {
     val temps = hourly.mapNotNull { h -> conv(h.temperature, unit) }
     val minT = temps.minOrNull() ?: 0.0
     val maxT = temps.maxOrNull() ?: 1.0
     HudCard(modifier = modifier.fillMaxWidth()) {
-        // key=时间戳：数据刷新时按身份复用 item，不整列重绑（v0.0.1）
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
-            itemsIndexed(hourly, key = { _, h -> h.timeMillis }) { i, h ->
-                HourlyItem(h, hourly.getOrNull(i + 1), unit, minT, maxT, i == 0)
+        Column {
+            // key=时间戳：数据刷新时按身份复用 item，不整列重绑（v0.0.1）
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+                itemsIndexed(hourly, key = { _, h -> h.timeMillis }) { i, h ->
+                    HourlyItem(
+                        h = h,
+                        prev = hourly.getOrNull(i - 1),
+                        next = hourly.getOrNull(i + 1),
+                        unit = unit,
+                        minT = minT,
+                        maxT = maxT,
+                        first = i == 0,
+                        windUnit = windUnit,
+                    )
+                }
+            }
+            // 图例：底部两行数字分别是降水概率与风速，去掉每格的 km/h 后在此说明一次
+            Spacer(Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(width = 6.dp, height = 2.dp).background(ZhishengCyan))
+                Spacer(Modifier.width(5.dp))
+                Text("降水概率", style = MaterialTheme.typography.labelSmall, color = ZhishengTextTertiary)
+                Spacer(Modifier.width(14.dp))
+                Box(Modifier.size(width = 6.dp, height = 2.dp).background(ZhishengTextTertiary))
+                Spacer(Modifier.width(5.dp))
+                Text(Fmt.windUnitLabel(windUnit), style = MaterialTheme.typography.labelSmall, color = ZhishengTextTertiary)
+                Spacer(Modifier.weight(1f))
+                Text(
+                    "${hourly.size}H",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ZhishengTextTertiary,
+                )
             }
         }
     }
@@ -631,13 +737,15 @@ private fun conv(c: Double?, unit: String): Double? =
 @Composable
 private fun HourlyItem(
     h: HourlyWeather,
+    prev: HourlyWeather?,
     next: HourlyWeather?,
     unit: String,
     minT: Double,
     maxT: Double,
     first: Boolean,
+    windUnit: String,
 ) {
-    val itemW = 52.dp
+    val itemW = 54.dp
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(itemW),
@@ -649,34 +757,68 @@ private fun HourlyItem(
         )
         Spacer(Modifier.height(6.dp))
         WeatherIcon(h.condition, Modifier.size(24.dp))
-        Spacer(Modifier.height(4.dp))
-        // 温度曲线段（本项中心 → 下一项中心）
-        Canvas(modifier = Modifier.fillMaxWidth().height(28.dp)) {
-            val range = (maxT - minT).coerceAtLeast(1.0).toFloat()
-            val yCur = size.height - ((conv(h.temperature, unit) ?: minT) - minT).toFloat() / range * (size.height - 6f) - 3f
-            drawCircle(ZhishengMint, 2.6f, Offset(size.width / 2f, yCur))
-            val nt = next?.let { conv(it.temperature, unit) }
-            if (nt != null) {
-                val yNext = size.height - (nt - minT).toFloat() / range * (size.height - 6f) - 3f
-                val path = Path().apply {
-                    moveTo(size.width / 2f, yCur)
-                    cubicTo(size.width, yCur, size.width / 2f, yNext, size.width, yNext)
-                }
-                drawPath(path, ZhishengMint.copy(alpha = 0.55f), style = Stroke(1.4f))
-            }
-        }
+        Spacer(Modifier.height(2.dp))
+        // 温度读数放在曲线正上方，视线不用来回跳
         Text(
-            text = Fmt.temp(h.temperature, unit) ?: "--",
+            text = Fmt.temp(h.temperature, unit)?.let { "$it°" } ?: "--",
             style = MaterialTheme.typography.titleSmall,
             color = ZhishengText,
         )
+        Spacer(Modifier.height(3.dp))
+        // 连续曲线：左半段接上一格中点，右半段接下一格中点
+        Canvas(modifier = Modifier.fillMaxWidth().height(30.dp)) {
+            val range = (maxT - minT).coerceAtLeast(1.0).toFloat()
+            val top = 4f
+            val usable = size.height - top - 4f
+            fun yOf(v: Double?): Float? = v?.let {
+                size.height - 4f - ((it - minT).toFloat() / range) * usable
+            }
+
+            val cx = size.width / 2f
+            val yCur = yOf(conv(h.temperature, unit)) ?: return@Canvas
+            val yPrev = yOf(prev?.let { conv(it.temperature, unit) })
+            val yNext = yOf(next?.let { conv(it.temperature, unit) })
+
+            // 左右邻的中点：与相邻格画出的同一点重合，所以跨格连续
+            val pLeft = yPrev?.let { Offset(0f, (it + yCur) / 2f) }
+            val pRight = yNext?.let { Offset(size.width, (it + yCur) / 2f) }
+            val pCur = Offset(cx, yCur)
+
+            // 面积填充（曲线到底边），极淡，给折线一点体积感
+            val fill = Path().apply {
+                moveTo(pLeft?.x ?: cx, pLeft?.y ?: yCur)
+                lineTo(pCur.x, pCur.y)
+                pRight?.let { lineTo(it.x, it.y) }
+                lineTo(pRight?.x ?: cx, size.height)
+                lineTo(pLeft?.x ?: cx, size.height)
+                close()
+            }
+            drawPath(fill, ZhishengMint.copy(alpha = 0.07f))
+
+            // 折线本体
+            val line = Path().apply {
+                moveTo(pLeft?.x ?: cx, pLeft?.y ?: yCur)
+                lineTo(pCur.x, pCur.y)
+                pRight?.let { lineTo(it.x, it.y) }
+            }
+            drawPath(line, ZhishengMint.copy(alpha = 0.75f), style = Stroke(1.6f))
+
+            // 当前小时用实心亮点强调，其余用小空心点
+            if (first) {
+                drawCircle(ZhishengMint, 3.2f, pCur)
+            } else {
+                drawCircle(ZhishengBg, 2.6f, pCur)
+                drawCircle(ZhishengMint.copy(alpha = 0.85f), 2.6f, pCur, style = Stroke(1.2f))
+            }
+        }
+        Spacer(Modifier.height(3.dp))
         Text(
             text = h.precipProb?.takeIf { it > 0 }?.let { "$it%" } ?: " ",
             style = MaterialTheme.typography.labelSmall,
             color = ZhishengCyan,
         )
         Text(
-            text = h.windSpeed?.let { "${it.roundToInt()}km/h" } ?: " ",
+            text = Fmt.windValue(h.windSpeed, windUnit) ?: " ",
             style = MaterialTheme.typography.labelSmall,
             color = ZhishengTextTertiary,
         )
@@ -725,7 +867,12 @@ private fun PrecipCard(minutes: List<MinutePrecip>, summary: String?, modifier: 
 
 // —— 逐日：全周归一化温度区间条 ——
 @Composable
-private fun DailySection(daily: List<DailyWeather>, unit: String, modifier: Modifier) {
+private fun DailySection(
+    daily: List<DailyWeather>,
+    unit: String,
+    windUnit: String,
+    modifier: Modifier,
+) {
     val lows = daily.mapNotNull { conv(it.low, unit) }
     val highs = daily.mapNotNull { conv(it.high, unit) }
     val weekMin = lows.minOrNull() ?: 0.0
@@ -763,12 +910,17 @@ private fun DailySection(daily: List<DailyWeather>, unit: String, modifier: Modi
                             Modifier.padding(horizontal = 8.dp).weight(1f).height(4.dp)
                                 .background(ZhishengCardBorder, RectangleShape)
                         ) {
-                            val lo = (((conv(d.low, unit) ?: weekMin) - weekMin) / range).toFloat().coerceIn(0f, 1f)
-                            val hi = (((conv(d.high, unit) ?: weekMax) - weekMin) / range).toFloat().coerceIn(0f, 1f)
+                            // lo/hi 先排序再归一：源数据偶发把高低温写反（小米 from/to 语义不定），
+                            // 若直接相减会得到负宽度，Modifier.width 抛异常（v0.0.2）
+                            val a = (((conv(d.low, unit) ?: weekMin) - weekMin) / range).toFloat()
+                            val b = (((conv(d.high, unit) ?: weekMax) - weekMin) / range).toFloat()
+                            val lo = minOf(a, b).coerceIn(0f, 1f)
+                            val hi = maxOf(a, b).coerceIn(0f, 1f)
+                            val w = (hi - lo).coerceIn(0.03f, 1f - lo)
                             Box(
                                 Modifier
                                     .offset(x = maxWidth * lo)
-                                    .width(maxWidth * (hi - lo).coerceAtLeast(0.03f))
+                                    .width(maxWidth * w)
                                     .fillMaxHeight()
                                     .background(tempColor(d.low), RectangleShape),
                             )
@@ -783,7 +935,7 @@ private fun DailySection(daily: List<DailyWeather>, unit: String, modifier: Modi
                     }
                     if (d.windSpeed != null) {
                         Row(Modifier.padding(start = 50.dp)) {
-                            Text("风 ${d.windSpeed.roundToInt()}km/h", style = MaterialTheme.typography.labelSmall, color = ZhishengTextTertiary)
+                            Text("风 ${Fmt.wind(d.windSpeed, windUnit)}", style = MaterialTheme.typography.labelSmall, color = ZhishengTextTertiary)
                         }
                     }
                 }
@@ -803,17 +955,23 @@ private fun tempColor(low: Double?): Color {
 
 // —— 遥测卡格：2 列 HUD 小卡 ——
 @Composable
-private fun TelemetryGrid(cur: CurrentWeather, today: DailyWeather?, unit: String, modifier: Modifier) {
+private fun TelemetryGrid(
+    cur: CurrentWeather,
+    today: DailyWeather?,
+    unit: String,
+    prefs: com.zhisheng.weather.ui.DisplayPrefs,
+    modifier: Modifier,
+) {
     val items = listOf(
         Triple("湿度", "HUMIDITY", cur.humidity?.let { "${it.roundToInt()}%" }),
-        Triple("风向风速", "WIND", windLabel(cur)),
-        Triple("气压", "PRESS", cur.pressure?.let { "${it.roundToInt()} hPa" }),
+        Triple("风向风速", "WIND", windLabel(cur, prefs.windUnit)),
+        Triple("气压", "PRESS", Fmt.pressure(cur.pressure, prefs.pressureUnit)),
         Triple("紫外线", "UV", cur.uvIndex?.let { uvText(it) }),
         Triple("能见度", "VIS", cur.visibility?.let { "${it.roundToInt()} km" }),
         Triple("露点", "DEW", cur.dewPoint?.let { "${Fmt.temp(it, unit)}°" }),
         Triple("云量", "CLOUD", cur.cloudCover?.let { "${it.roundToInt()}%" }),
-        Triple("阵风", "GUST", cur.windGust?.let { "${it.roundToInt()} km/h" }),
-        Triple("1时降水", "PRECIP", cur.precipMm?.let { "${"%.1f".format(it)} mm" }),
+        Triple("阵风", "GUST", Fmt.wind(cur.windGust, prefs.windUnit)),
+        Triple("1时降水", "PRECIP", cur.precipMm?.let { String.format(Locale.US, "%.1f mm", it) }),
     )
     Column(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         items.chunked(2).forEach { rowItems ->
@@ -925,13 +1083,13 @@ private fun TeleLabel(cn: String, en: String) {
     }
 }
 
-private fun windLabel(cur: CurrentWeather): String? {
+private fun windLabel(cur: CurrentWeather, windUnit: String): String? {
     val dir = com.zhisheng.weather.data.WeatherRepository.windDirection(cur.windDirectionDeg)
-    val speed = cur.windSpeed
+    val speed = Fmt.wind(cur.windSpeed, windUnit)
     return when {
-        dir != null && speed != null -> "$dir ${speed.roundToInt()}km/h"
+        dir != null && speed != null -> "$dir $speed"
         dir != null -> dir
-        speed != null -> "${speed.roundToInt()}km/h"
+        speed != null -> speed
         else -> null
     }
 }
@@ -1264,7 +1422,7 @@ private fun EmptyState(onSearchClick: () -> Unit) {
                 .background(ZhishengSurface)
                 .border(1.dp, ZhishengMint.copy(alpha = 0.6f), RectangleShape)
                 .drawCornerBrackets(ZhishengMint)
-                .clickable { onSearchClick() }
+                .clickable(role = Role.Button, onClickLabel = "添加城市") { onSearchClick() }
                 .padding(horizontal = 20.dp, vertical = 12.dp),
         ) {
             Text("[ + ADD CITY ]", style = MaterialTheme.typography.titleSmall, color = ZhishengMint, letterSpacing = 1.sp)
@@ -1287,7 +1445,9 @@ private fun ErrorState(message: String, onSearchClick: () -> Unit) {
             "[ 换一个城市试试 ]",
             style = MaterialTheme.typography.bodyMedium,
             color = ZhishengMint,
-            modifier = Modifier.clickable { onSearchClick() },
+            modifier = Modifier
+                .clickable(role = Role.Button, onClickLabel = "换一个城市") { onSearchClick() }
+                .padding(8.dp),
         )
     }
 }
@@ -1354,7 +1514,7 @@ private fun CityDrawer(
                         )
                     }
                 }
-                IconButton(onClick = { onRemove(city.locationKey) }, modifier = Modifier.size(40.dp)) {
+                IconButton(onClick = { onRemove(city.locationKey) }, modifier = Modifier.size(48.dp)) {
                     Icon(Icons.Filled.Close, contentDescription = "删除${city.name}", tint = ZhishengTextTertiary, modifier = Modifier.size(16.dp))
                 }
             }

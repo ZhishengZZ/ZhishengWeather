@@ -3,7 +3,6 @@ package com.zhisheng.weather.data
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
-import kotlin.math.roundToInt
 import kotlin.math.sin
 
 // 本地月相计算（Meeus《天文算法》49 章，分秒级精度）——数据源缺 moonPhase 字段时的兜底。
@@ -13,9 +12,12 @@ import kotlin.math.sin
 object MoonCalc {
 
     fun phaseKey(dateMillis: Long): String {
-        val date = Instant.ofEpochMilli(dateMillis).atZone(ZoneId.systemDefault()).toLocalDate()
-        val dayStart = date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-        val dayEnd = dayStart + 86_400_000L
+        // 日界按本地时区算：原来用本地日期却配 UTC 零点，窗口整体偏了一个时区偏移，
+        // 东八区会把事件判到前一天（v0.0.2）
+        val zone = ZoneId.systemDefault()
+        val date = Instant.ofEpochMilli(dateMillis).atZone(zone).toLocalDate()
+        val dayStart = date.atStartOfDay(zone).toInstant().toEpochMilli()
+        val dayEnd = date.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
         val events = eventsAround(dayStart)
         events.firstOrNull { it.first in dayStart until dayEnd }?.let { return it.second }
         val last = events.lastOrNull { it.first < dayStart } ?: return "waning-crescent"
@@ -27,11 +29,19 @@ object MoonCalc {
         }
     }
 
+    // 朔望月长度（毫秒）与 k=0 基准（2000-01-06 18:14 UTC 那次新月）
+    private const val SYNODIC_MS = 2_551_442_877L
+    private const val K0_EPOCH_MS = 946_728_000_000L + 476_040_000L
+
     // 目标日前后共 3 个朔望月的 12 个相位事件，升序（epochMillis → 事件名）
     private fun eventsAround(millis: Long): List<Pair<Long, String>> {
-        val k0 = ((millis / 31_556_952_000.0) * 12.3685).roundToInt()
-        val out = ArrayList<Pair<Long, String>>(12)
-        for (k in k0 - 1..k0 + 1) {
+        // k 必须从 phaseMillis 的同一基准（2000 年那次新月）起算。
+        // 原式先把 epoch 当作「1970 年起的儒略年数」再乘每年朔望月数，基准差了 30 年，
+        // 算出的 k0≈700 对应 2056 年，12 个事件全部落在目标日之后 →
+        // phaseKey 两个分支都落空，永远返回兜底的 "waning-crescent"（月相恒显示"残月"）。
+        val k0 = Math.round((millis - K0_EPOCH_MS).toDouble() / SYNODIC_MS).toInt()
+        val out = ArrayList<Pair<Long, String>>(20)
+        for (k in k0 - 2..k0 + 2) {
             out.add(phaseMillis(k, 0.00) to "new-moon")
             out.add(phaseMillis(k, 0.25) to "first-quarter")
             out.add(phaseMillis(k, 0.50) to "full-moon")

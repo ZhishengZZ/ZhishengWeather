@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">枳生天气</string>
+    <string name="widget_name">枳生天气</string>
+    <string name="widget_icon_desc">天气图标</string>
+    <string name="widget_label_small">枳生天气 · 小</string>
+    <string name="widget_label_medium">枳生天气 · 中</string>
+    <string name="widget_label_large">枳生天气 · 大</string>
+    <string name="widget_desc_small">城市 · 实时温度 · 今日高低温</string>
+    <string name="widget_desc_medium">实况 + 未来四小时</string>
+    <string name="widget_desc_large">实况 + 逐时 + 三日预报 + 空气质量</string>
 </resources>

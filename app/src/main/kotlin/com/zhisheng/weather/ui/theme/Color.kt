@@ -17,4 +17,6 @@ val ZhishengRed = Color(0xFFFF3030)         // 警报红
 
 val ZhishengText = Color(0xFFE8F0E8)        // 数据白（微冷）
 val ZhishengTextSecondary = Color(0xFFC8D8C8) // 钢灰 · 次级（微冷）
-val ZhishengTextTertiary = Color(0xFF7E8A7E)  // 注释灰
+// 注释灰：原 #7E8A7E 在面板底(#0E0E12)上约 4.0:1，低于 AA 4.5:1，
+// 而它恰恰用在归属地/坐标这类需要看清的小字上，提亮到约 5.4:1（v0.0.2）
+val ZhishengTextTertiary = Color(0xFF95A395)

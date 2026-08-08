@@ -147,6 +147,11 @@ enum class WeatherCondition(val label: String) {
             else -> CLOUDY
         }
 
+        // 和风 condition：icon 带昼夜变体（100 晴日 / 150 晴夜），code 恒为白天码。
+        // 优先 icon，缺失时退回 code（v0.0.2：修复夜间显示太阳）
+        fun fromQw(icon: String?, code: String?): WeatherCondition =
+            fromQwCode(icon?.takeIf { it.isNotBlank() } ?: code)
+
         // 和风天气图标码 → 条件（1xx 白天 / 15x 夜间 / 3xx 雨 / 4xx 雪 / 5xx 视程）
         fun fromQwCode(code: String?): WeatherCondition = when (code) {
             "100" -> CLEAR
