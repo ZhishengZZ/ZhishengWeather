@@ -26,8 +26,8 @@ android {
         applicationId = "com.zhisheng.weather"
         minSdk = 26
         targetSdk = 34
-        versionCode = 20260807
-        versionName = "0.0.1 Preview"
+        versionCode = 20260808
+        versionName = "0.0.2"
 
         buildConfigField("String", "QW_HOST", "\"${if (publicBuild) "" else lp("qw.host")}\"")
         buildConfigField("String", "QW_PROJECT_ID", "\"${if (publicBuild) "" else lp("qw.project_id")}\"")

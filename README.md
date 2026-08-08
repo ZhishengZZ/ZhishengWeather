@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img alt="版本" src="https://img.shields.io/badge/版本-0.0.1_Preview-FF6F1E?style=flat-square"/>
+  <img alt="版本" src="https://img.shields.io/badge/版本-0.0.2-FF6F1E?style=flat-square"/>
   <img alt="许可" src="https://img.shields.io/badge/许可-MIT-3BFF8C?style=flat-square"/>
   <img alt="发布" src="https://img.shields.io/github/v/release/ZhishengZZ/ZhishengWeather?style=flat-square&color=FF6F1E"/>
   <img alt="构建" src="https://img.shields.io/github/actions/workflow/status/ZhishengZZ/ZhishengWeather/.github/workflows/build.yml?style=flat-square&label=BUILD"/>
@@ -42,7 +42,7 @@
 | 主页 | 遥测 | 搜索 | 设置 |
 |:---:|:---:|:---:|:---:|
 | <img src="assets/screen_home.png" width="220"/> | <img src="assets/screen_telemetry.png" width="220"/> | <img src="assets/screen_search.png" width="220"/> | <img src="assets/screen_settings.png" width="220"/> |
-| 实时天气 · 灾害预警 · 逐时降水 | 湿度 / 风向 / 气压等遥测 · 空气质量 · 生活指数 | 城市检索 · 多城管理 | 单位 · 模块开关 · 数据源状态 |
+| 实时天气 · 灾害预警 · 逐时降水 · 天气氛围层 | 湿度 / 风向 / 气压等遥测 · 空气质量 · 生活指数 | 城市检索 · 多城管理 · 可选定位 | 数据源可选 · 单位 · 模块开关 |
 
 ## 02// 功能特性
 
@@ -101,20 +101,28 @@ AI 生成 1024² ──▶ 亮度→Alpha 键控（黑底转透明）──▶ 3
 
 ```
 app/src/main/kotlin/com/zhisheng/weather/
-├── MainActivity.kt              # 单 Activity 入口
+├── MainActivity.kt              # 单 Activity 入口 · 返回栈 · 状态保存
 ├── data/
 │   ├── QWeatherApi.kt / QwAuth.kt / QwModels.kt   # 主源 + Ed25519 JWT 签名
-│   ├── XiaomiApi.kt / XiaomiModels.kt             # 补充链
-│   ├── OpenMeteoApi.kt                            # 兜底链（daily + hourly）
-│   ├── WeatherRepository.kt                       # 三源融合 · backfill 决策
+│   ├── XiaomiApi.kt / XiaomiModels.kt             # 补充链 + 坐标反查城市
+│   ├── OpenMeteoApi.kt                            # 补缺工具（daily + hourly）
+│   ├── OpenMeteoSource.kt                         # 独立主源（免 key 全链路）
+│   ├── LocationSource.kt                          # 可选定位（系统 API，默认关）
+│   ├── WeatherRepository.kt                       # 多源融合 · 源路由 · backfill
 │   ├── MoonCalc.kt                                # 本地月相算法（Meeus）
+│   ├── WidgetCache.kt                             # 小组件数据快照
 │   └── CityRepository.kt / SettingsRepository.kt  # 城市 / 偏好
 ├── model/Weather.kt             # 领域模型
+├── widget/
+│   └── ZhishengWidgetProvider.kt # 2x2 / 4x2 / 4x4 三档小组件
 └── ui/
     ├── WeatherViewModel.kt
+    ├── Format.kt                # 温度 / 风速 / 气压单位换算
     ├── home/HomeScreen.kt       # 主页终端面板
     ├── SearchScreen.kt / SettingsScreen.kt
-    └── components/WeatherIcon.kt # 图标渲染
+    └── components/
+        ├── WeatherIcon.kt      # 图标渲染
+        └── Ambience.kt         # 天气氛围层（数据雨 / 飘雪 / 雾噪点 / 扫描线）
 ```
 
 ## 07// 构建与运行
@@ -163,7 +171,18 @@ keystore.key_password=<...>
 
 ## 09// 版本记录
 
-**v0.0.1 Preview**（当前）
+**v0.0.2**（当前）
+
+- 数据源可选：自动优选 / 和风 / 小米 / Open-Meteo 四选一。Open-Meteo 升为独立主源，免 key 即可跑实况 / 逐时 / 逐日 / 空气质量 / 分钟降水 / 中文城市搜索——装不上和风凭据也是完整体验
+- 可选定位：默认关闭，仅在你开启开关并点击定位时申请一次粗略位置权限；只用系统定位，不引入 Google Play 服务，拒绝后手动搜索照常可用
+- 天气氛围层：雨落数据雨 / 雪飘点 / 雾呼吸噪点 / 雷暴扫描线，只在内容之下绘制，三档强度可调
+- 桌面小组件：2x2 / 4x2 / 4x4 三档终端风小组件
+- 设置页重做：数据源 / 定位 / 单位（含风速、气压）/ 显示模块 / 界面效果 / 关于
+- 逐时温度曲线重做为跨格连续折线（原实现是一串断开的半段弧）
+- 修若干数据错误：夜间显示太阳（和风 icon 才带昼夜变体）、月相恒显示"残月"（朔望月序号基准差 30 年）、逐日高低温倒挂、双源失败整屏红字
+- 修交互问题：系统返回键退出 App、旋转丢失当前页、预警展开态错位
+
+**v0.0.1 Preview**
 
 - 首个公开预览：磷光终端 UI · 15 枚 AI 生成图标 · 三源数据融合（和风 / 小米 / Open-Meteo）
 - 零配置体验：首装种子默认城市，无凭据自动降级公共源

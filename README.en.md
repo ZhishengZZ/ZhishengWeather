@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-0.0.1_Preview-FF6F1E?style=flat-square"/>
+  <img alt="version" src="https://img.shields.io/badge/version-0.0.2-FF6F1E?style=flat-square"/>
   <img alt="license" src="https://img.shields.io/badge/license-MIT-3BFF8C?style=flat-square"/>
   <img alt="release" src="https://img.shields.io/github/v/release/ZhishengZZ/ZhishengWeather?style=flat-square&color=FF6F1E"/>
   <img alt="build" src="https://img.shields.io/github/actions/workflow/status/ZhishengZZ/ZhishengWeather/.github/workflows/build.yml?style=flat-square&label=BUILD"/>
@@ -41,7 +41,7 @@ Most weather apps keep getting heavier — splash ads, paywall pop-ups, marketin
 | Home | Telemetry | Search | Settings |
 |:---:|:---:|:---:|:---:|
 | <img src="assets/screen_home.png" width="220"/> | <img src="assets/screen_telemetry.png" width="220"/> | <img src="assets/screen_search.png" width="220"/> | <img src="assets/screen_settings.png" width="220"/> |
-| *Live weather · alerts · hourly rain* | *Humidity / wind / pressure · air quality · life indices* | *City search · multi-city list* | *Units · module toggles · feed status* |
+| *Live weather · alerts · hourly rain · weather ambience* | *Humidity / wind / pressure · air quality · life indices* | *City search · multi-city list · optional location* | *Feed choice · units · module toggles* |
 
 ## 02// Features
 
@@ -100,20 +100,28 @@ On auth: the QWeather API is called with an Ed25519 (EdDSA) signed JWT. The key 
 
 ```
 app/src/main/kotlin/com/zhisheng/weather/
-├── MainActivity.kt              # single-Activity entry
+├── MainActivity.kt              # single-Activity entry · back stack · state saving
 ├── data/
-│   ├── QWeatherApi.kt / QwAuth.kt / QwModels.kt   # primary feed + JWT signing
-│   ├── XiaomiApi.kt / XiaomiModels.kt             # supplement feed
-│   ├── OpenMeteoApi.kt                            # fallback feed (daily + hourly)
-│   ├── WeatherRepository.kt                       # fusion + backfill decisions
+│   ├── QWeatherApi.kt / QwAuth.kt / QwModels.kt   # primary feed + Ed25519 JWT signing
+│   ├── XiaomiApi.kt / XiaomiModels.kt             # supplement feed + reverse geocoding
+│   ├── OpenMeteoApi.kt                            # backfill helper (daily + hourly)
+│   ├── OpenMeteoSource.kt                         # primary feed in its own right (key-free, full chain)
+│   ├── LocationSource.kt                          # optional location (system API, off by default)
+│   ├── WeatherRepository.kt                       # fusion · feed routing · backfill
 │   ├── MoonCalc.kt                                # on-device moon phase (Meeus)
+│   ├── WidgetCache.kt                             # widget data snapshot
 │   └── CityRepository.kt / SettingsRepository.kt  # cities & preferences
 ├── model/Weather.kt             # domain models
+├── widget/
+│   └── ZhishengWidgetProvider.kt # 2x2 / 4x2 / 4x4 home screen widgets
 └── ui/
     ├── WeatherViewModel.kt
+    ├── Format.kt                # temperature / wind / pressure unit conversion
     ├── home/HomeScreen.kt       # home terminal panel
     ├── SearchScreen.kt / SettingsScreen.kt
-    └── components/WeatherIcon.kt # glyph rendering
+    └── components/
+        ├── WeatherIcon.kt      # glyph rendering
+        └── Ambience.kt         # weather ambience (data-rain / snow / fog noise / sweeps)
 ```
 
 ## 07// Build
@@ -162,7 +170,18 @@ Real software has rough edges. Here they are, up front:
 
 ## 09// Changelog
 
-**v0.0.1 Preview** *(current)*
+**v0.0.2** *(current)*
+
+- Pick your feed: auto-select, QWeather, Xiaomi or Open-Meteo. Open-Meteo is now a primary feed in its own right — live weather, hourly, daily, air quality, minute-level rain and Chinese city search, all without a key. No credentials, still the whole experience.
+- Optional location: off by default. A single coarse-location request happens only when you turn the switch on and tap locate. System location only, no Google Play Services; decline it and manual search works exactly as before.
+- Weather ambience: data-rain, drifting snow, breathing fog noise and thunderstorm sweeps, drawn beneath the content and dialable across three intensities.
+- Home screen widgets in 2x2, 4x2 and 4x4, in the same terminal dress as the app.
+- Settings rebuilt around feeds, location, units (wind speed and pressure included), visible modules, visual effects and about.
+- The hourly temperature curve is one continuous polyline across cells now — it used to be a row of disconnected half-arcs.
+- Data fixes: a sun icon shown at night (only QWeather's icon codes carry day/night variants), the moon phase permanently stuck on "waning crescent" (the lunation index was benchmarked 30 years off), inverted daily highs and lows, and a full-screen red error when both feeds failed.
+- Interaction fixes: the system back button quitting the app, rotation losing the current page, and misaligned alert cards when expanded.
+
+**v0.0.1 Preview**
 
 - First public preview: phosphor-terminal UI · 15 AI-generated glyphs · three-feed data fusion (QWeather / Xiaomi / Open-Meteo).
 - Zero-config experience: a first install seeds a default city and degrades to public feeds without credentials.
